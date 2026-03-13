@@ -4,6 +4,7 @@ import { PasswordInput } from "../components/PasswordInput";
 import { Button } from "../components/Button";
 import { Card } from "../components/Card";
 import { GraduationCap, Shield, Info, AlertTriangle } from "lucide-react";
+import { Modal } from "../components/Modal";
 
 export default function Login() {
   // Estados básicos para el formulario
@@ -11,6 +12,9 @@ export default function Login() {
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
+  //Estados para Modales - cerrados oh abiertos
+    const [showSecurityModal, setShowSecurityModal] = useState(false);
+    const [showPrivacyModal, setShowPrivacyModal] = useState(false);  
 
   // Función que maneja el clic en "Iniciar Sesión"
     const handleSubmit = (e) => {
@@ -54,7 +58,7 @@ export default function Login() {
         </div>
 
         {/* Tarjeta Principal del Formulario */}
-        <Card className="p-6 sm:p-8">
+        <Card className="p-6 sm:p-8 border-gray-100">
             <form onSubmit={handleSubmit} className="space-y-6">
             
             <Input
@@ -122,9 +126,11 @@ export default function Login() {
                     <strong>Aviso de Seguridad:</strong> Este sistema NO está diseñado para recopilar información personal identificable (PII) sensible ni datos confidenciales. No ingrese información médica detallada, datos financieros o información altamente sensible.
                 </p>
                 <button
+                    type="button"
+                    onClick={() => setShowSecurityModal(true)}
                     className="text-xs text-amber-700 underline hover:text-amber-900 break-words"
                 >
-                Ver más información de seguridad
+                    Ver más información de seguridad
                 </button>
                 </div>
             </div>
@@ -138,6 +144,8 @@ export default function Login() {
                     Al iniciar sesión, aceptas el uso de cookies estrictamente necesarias para mantener tu sesión activa.
                 </p>
                 <button
+                    type="button"
+                    onClick={() => setShowPrivacyModal(true)}
                     className="text-xs text-blue-700 underline hover:text-blue-900 break-words"
                 >
                     Ver Aviso de Privacidad completo
@@ -153,8 +161,130 @@ export default function Login() {
             © 2026 UTEZ. Sistema JyPS v1.0.0
             </p>
         </div>
-
         </div>
-    </div>
+        
+        {/* ================= MODALES ================= */}
+        {/* Modal de Información de Seguridad */}
+        <Modal
+        isOpen={showSecurityModal}
+        onClose={() => setShowSecurityModal(false)}
+        title="Información de Seguridad"
+        >
+        <div className="space-y-4">
+            <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg">
+            <h4 className="font-bold text-red-800 mb-2 flex items-center gap-2">
+                ⚠️ Advertencia Importante
+            </h4>
+            <p className="text-sm text-red-700">
+                Este sistema NO está diseñado ni autorizado para almacenar información personal identificable (PII) sensible o datos confidenciales de alto riesgo.
+            </p>
+            </div>
+
+            <section>
+            <h3 className="font-bold text-[#0F2C59] text-sm">❌ NO incluya en sus solicitudes:</h3>
+            <ul className="list-disc list-inside text-gray-700 space-y-1 mt-2 text-sm pl-2">
+                <li>Diagnósticos médicos detallados o condiciones de salud sensibles</li>
+                <li>Información financiera (números de cuenta, tarjetas, salarios)</li>
+                <li>Documentos oficiales con datos personales (INE, CURP completo, RFC)</li>
+                <li>Información de terceros sin su consentimiento</li>
+                <li>Datos de menores de edad sin autorización parental</li>
+            </ul>
+            </section>
+
+            <section>
+            <h3 className="font-bold text-[#0F2C59] text-sm">✅ Recomendaciones de Uso:</h3>
+            <ul className="list-disc list-inside text-gray-700 space-y-1 mt-2 text-sm pl-2">
+                <li>Use descripciones generales para justificantes ("Cita médica", "Trámite personal")</li>
+                <li>No comparte su sesión activa con otras personas</li>
+                <li>Cierre sesión al terminar de usar el sistema en dispositivos compartidos</li>
+                <li>Reporte cualquier irregularidad al administrador del sistema</li>
+            </ul>
+            </section>
+
+            <section>
+            <h3 className="font-bold text-[#0F2C59] text-sm">🔒 Medidas de Seguridad Actuales:</h3>
+            <ul className="list-disc list-inside text-gray-700 space-y-1 mt-2 text-sm pl-2">
+                <li>Almacenamiento local cifrado en el navegador</li>
+                <li>Validación de cuentas activas/inactivas</li>
+                <li>Control de acceso basado en roles</li>
+                <li>Protección de rutas por autenticación</li>
+            </ul>
+            </section>
+
+            <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg">
+            <p className="text-sm text-blue-800">
+                <strong>Nota:</strong> Este es un sistema de demostración educativo. Para un entorno de producción, se requieren medidas de seguridad adicionales como encriptación end-to-end, auditorías de seguridad y cumplimiento de estándares como ISO 27001.
+            </p>
+            </div>
+        </div>
+        </Modal>
+
+      {/* Modal de Aviso de Privacidad */}
+        <Modal
+        isOpen={showPrivacyModal}
+        onClose={() => setShowPrivacyModal(false)}
+        title="Aviso de Privacidad"
+        size="lg"
+        >
+        <div className="space-y-4">
+            <section>
+            <h3 className="font-bold text-[#0F2C59] text-sm">1. Responsable del Tratamiento de Datos</h3>
+            <p className="text-gray-700 text-sm mt-1">
+                La Universidad Tecnológica Emiliano Zapata del Estado de Morelos (UTEZ), con domicilio en Av. Universidad Tecnológica No. 1, Col. Palo Escrito, Emiliano Zapata, Morelos, es responsable del tratamiento de sus datos personales.
+            </p>
+            </section>
+
+            <section>
+            <h3 className="font-bold text-[#0F2C59] text-sm">2. Datos Recopilados</h3>
+            <p className="text-gray-700 text-sm mt-1">El sistema recopila únicamente:</p>
+            <ul className="list-disc list-inside text-gray-700 space-y-1 mt-1 text-sm pl-2">
+                <li>Nombre completo</li>
+                <li>Correo electrónico institucional</li>
+                <li>Número de teléfono</li>
+                <li>Rol en la institución</li>
+                <li>Información sobre solicitudes de pases y justificantes</li>
+            </ul>
+            </section>
+
+            <section>
+            <h3 className="font-bold text-[#0F2C59] text-sm">3. Finalidad del Tratamiento</h3>
+            <p className="text-gray-700 text-sm mt-1">Sus datos serán utilizados exclusivamente para:</p>
+            <ul className="list-disc list-inside text-gray-700 space-y-1 mt-1 text-sm pl-2">
+                <li>Gestionar solicitudes de pases de salida</li>
+                <li>Gestionar justificantes de ausencia</li>
+                <li>Control de acceso y seguridad institucional</li>
+                <li>Reportes estadísticos internos</li>
+            </ul>
+            </section>
+
+            <section>
+            <h3 className="font-bold text-[#0F2C59] text-sm">4. Almacenamiento y Seguridad</h3>
+            <p className="text-gray-700 text-sm mt-1">
+                Los datos se almacenan localmente en su navegador mediante tecnología localStorage. Es su responsabilidad no compartir dispositivos con acceso a su sesión activa.
+            </p>
+            </section>
+
+            <section>
+            <h3 className="font-bold text-[#0F2C59] text-sm">5. Derechos ARCO</h3>
+            <p className="text-gray-700 text-sm mt-1">
+                Usted tiene derecho a Acceder, Rectificar, Cancelar u Oponerse al tratamiento de sus datos personales, conforme a la Ley Federal de Protección de Datos Personales en Posesión de los Particulares (LFPDPPP).
+            </p>
+            </section>
+
+            <section>
+            <h3 className="font-bold text-[#0F2C59] text-sm">6. Contacto</h3>
+            <p className="text-gray-700 text-sm mt-1">
+                Para ejercer sus derechos ARCO o cualquier duda sobre el tratamiento de sus datos, contacte al administrador del sistema o al departamento de TI de la institución.
+            </p>
+            </section>
+
+            <div className="pt-4 border-t border-gray-100">
+            <p className="text-xs text-gray-500 italic text-left">
+                Última actualización: 11 de febrero de 2026
+            </p>
+            </div>
+        </div>
+        </Modal>
+    </div> //final de tu contenedor min-h-screen 
   );
 }
