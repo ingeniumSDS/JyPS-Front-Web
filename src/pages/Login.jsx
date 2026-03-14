@@ -1,12 +1,64 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "../components/Input";
 import { PasswordInput } from "../components/PasswordInput";
 import { Button } from "../components/Button";
 import { Card } from "../components/Card";
-import { GraduationCap, Shield, Info, AlertTriangle } from "lucide-react";
+import { GraduationCap, Shield, Info, AlertTriangle ,KeyRound, Mail, AlertCircle, FileText, ArrowRight, ShieldCheck, UserX, Clock  } from "lucide-react";
 import { Modal } from "../components/Modal";
 
+const MAX_INTENTOS = 3;
+const TIEMPO_BLOQUEO_MS = 1 * 60 * 1000;
+
 export default function Login() {
+  // Estados de seguridad
+    const [intentosFallidos, setIntentosFallidos] = useState(0);
+    const [estaBloqueado, setEstaBloqueado] = useState(false);
+    const [tiempoRestante, setTiempoRestante] = useState(0);  
+
+    // Cargar estado de bloqueo al iniciar
+    useEffect(() => {
+    const datosBloqueo = localStorage.getItem('jyps_bloqueo');
+    if (datosBloqueo) {
+        const { intentos, tiempoDesbloqueo } = JSON.parse(datosBloqueo);
+        const ahora = Date.now();
+
+        if (tiempoDesbloqueo && ahora < tiempoDesbloqueo) {
+        setEstaBloqueado(true);
+        setIntentosFallidos(intentos);
+        setTiempoRestante(Math.ceil((tiempoDesbloqueo - ahora) / 1000));
+        } else {
+        localStorage.removeItem('jyps_bloqueo');
+        }
+    }
+  }, []);
+
+  // contador de tiempo restante
+    useEffect(() => {
+    let intervalo;
+    if (estaBloqueado && tiempoRestante > 0) {
+        intervalo = setInterval(() => {
+        setTiempoRestante(prev => {
+            if (prev <= 1) {
+            setEstaBloqueado(false);
+            setIntentosFallidos(0);
+            localStorage.removeItem('jyps_bloqueo');
+            setError(''); // Limpiamos
+            return 0;
+            }
+            return prev - 1;
+        });
+        }, 1000);
+    }
+    return () => clearInterval(intervalo);
+  }, [estaBloqueado, tiempoRestante]);
+
+  //tiempo en formato mm:ss
+  const formatoTiempo = (segundos) => {
+    const min = Math.floor(segundos / 60);
+    const seg = segundos % 60;
+    return `${min}:${seg.toString().padStart(2, '0')}`;
+  };
+
   // Estados básicos para el formulario
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -16,28 +68,40 @@ export default function Login() {
     const [showSecurityModal, setShowSecurityModal] = useState(false);
     const [showPrivacyModal, setShowPrivacyModal] = useState(false);  
 
-  // Función que maneja el clic en "Iniciar Sesión"
     const handleSubmit = (e) => {
-    e.preventDefault();
-    setError("");
+        e.preventDefault();
+    // Si está bloqueado, no dejamos que intente nada
+    if (estaBloqueado) return;
 
-    // Validaciones
-    if (!email || !password) {
-        setError("Por favor, completa todos los campos.");
-        return;
-    }
-    if (!email.endsWith("@utez.edu.mx")) {
-        setError("Debes usar tu correo institucional (@utez.edu.mx).");
-        return;
-    }
+    // Simulación de validación hardcodeada (AQUÍ ES DONDE FALLARÁ A PROPÓSITO)
+    if (email === 'trabajador@utez.edu.mx' && password === '123456') {
+      // ÉXITO
+        setIntentosFallidos(0);
+        localStorage.removeItem('jyps_bloqueo');
+        setError('');
+        navigate('/dashboard'); // Ajusta a la ruta que uses
+    } else {
+      // FALLO
+        const nuevosIntentos = intentosFallidos + 1;
+        setIntentosFallidos(nuevosIntentos);
 
-    // Simulamos que está cargando
-    setLoading(true);
-    setTimeout(() => {
-        setLoading(false);
-        alert("¡Validación exitosa! (Aquí conectaremos con el Backend después)");
-        console.log("Datos listos para Spring Boot:", { email, password });
-    }, 1500);
+        if (nuevosIntentos >= MAX_INTENTOS) {
+        // BLOQUEAR CUENTA
+        const tiempoDesbloqueo = Date.now() + TIEMPO_BLOQUEO_MS;
+        setEstaBloqueado(true);
+        setTiempoRestante(Math.ceil(TIEMPO_BLOQUEO_MS / 1000));
+        
+        localStorage.setItem('jyps_bloqueo', JSON.stringify({
+            intentos: nuevosIntentos,
+            tiempoDesbloqueo: tiempoDesbloqueo
+        }));
+        setError(''); // Limpiamos el error normal para mostrar la pantalla de bloqueo
+    } else {
+        // SOLO ADVERTIR
+        const intentosRestantes = MAX_INTENTOS - nuevosIntentos;
+        setError(`Credenciales incorrectas. Te quedan ${intentosRestantes} intento(s).`);
+        }
+    }
     };
 
     return (
@@ -59,62 +123,109 @@ export default function Login() {
 
         {/* Tarjeta Principal del Formulario */}
         <Card className="p-6 sm:p-8 border-gray-100">
-            <form onSubmit={handleSubmit} className="space-y-6">
-            
-            <Input
-                type="email"
-                label="Correo Electrónico"
-                placeholder="tu.nombre@utez.edu.mx"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-            />
+            {estaBloqueado ? (
+                /* --- PANTALLA DE BLOQUEO ESTÁTICA --- */
+                <div className="text-center py-2">
+                    <div className="inline-flex items-center justify-center w-20 h-20 bg-red-100 rounded-full mb-6">
+                    <AlertTriangle size={40} className="text-[#DC3545]" />
+                    </div>
 
-            <PasswordInput
-                label="Contraseña"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-            />
+                    <h2 className="text-xl sm:text-2xl font-bold text-[#DC3545] mb-4">
+                    Cuenta Bloqueada Temporalmente
+                    </h2>
 
-            {/* Mensaje de Error (si existe) */}
-            {error && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
-                <AlertTriangle size={16} className="text-red-600 flex-shrink-0" />
-                <p className="text-sm text-red-700">{error}</p>
+                    <p className="text-sm sm:text-base text-gray-700 mb-6">
+                    Ha alcanzado el límite de <strong>{MAX_INTENTOS} intentos fallidos</strong> de inicio de sesión.
+                    </p>
+
+                    <div className="bg-red-50 border-2 border-red-200 rounded-lg p-6 mb-6">
+                    <div className="flex items-center justify-center gap-3 mb-4">
+                        <div className="text-center">
+                        <p className="text-sm sm:text-base text-gray-700 mb-1">Tu cuenta estará bloqueada por:</p>
+                            <div className="flex items-center gap-2 justify-center">
+                            <Clock size={24} className="text-red-600" />
+                            <p className="text-2xl sm:text-3xl font-bold text-[#DC3545]">
+                            {Math.ceil(TIEMPO_BLOQUEO_MS / 60000)} minuto{Math.ceil(TIEMPO_BLOQUEO_MS / 60000) === 1 ? '' : 's'}
+                            </p>
+                            </div>
+                        </div>
+                    </div>
+                    <p className="text-xs sm:text-sm text-center text-gray-600">
+                        Podrás volver a intentar iniciar sesión después de este tiempo.
+                    </p>
+                    </div>
+
+                    <div className="text-left bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                    <h3 className="font-semibold text-[#0F2C59] mb-2 text-sm">ℹ️ ¿Qué puedo hacer?</h3>
+                    <ul className="text-xs sm:text-sm text-gray-700 space-y-1">
+                        <li>• Espere a que pase el tiempo de bloqueo.</li>
+                        <li>• Verifique que está usando las credenciales correctas.</li>
+                        <li>• Si olvidó su contraseña, use la opción de recuperación.</li>
+                        <li>• Contacte al administrador si necesita ayuda.</li>
+                    </ul>
+                    </div>
+
+                    <Button
+                    variant="outline"
+                    fullWidth
+                    onClick={() => console.log('Ir a recuperar contraseña')}
+                    className="mb-3"
+                    >
+                    ¿Olvidaste tu contraseña?
+                    </Button>
+
+                    <p className="text-xs text-gray-500 mt-4">
+                    El acceso se restablecerá automáticamente.
+                    </p>
                 </div>
+            ) : (
+                /* --- FORMULARIO NORMAL DE LOGIN --- */
+                <>
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                    <Input
+                        type="email"
+                        label="Correo Electrónico"
+                        placeholder="tu.nombre@utez.edu.mx"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                    />
+
+                    <PasswordInput
+                        label="Contraseña"
+                        placeholder="••••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                    />
+
+                  {/* Mensaje de Error (si existe) */}
+                    {error && (
+                        <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
+                        <AlertTriangle size={16} className="text-red-600 flex-shrink-0" />
+                        <p className="text-sm text-red-700">{error}</p>
+                        </div>
+                    )}
+
+                    <div className="text-center">
+                        <a href="#recuperar" className="text-sm text-[#0F2C59] hover:underline font-medium">
+                        ¿Olvidaste tu contraseña?
+                        </a>
+                    </div>
+
+                    <Button type="submit" disabled={loading} fullWidth>
+                        {loading ? "Ingresando..." : "Ingresar"}
+                    </Button>
+                    </form>
+
+                    <div className="mt-6 text-center">
+                    <p className="text-sm text-gray-600">
+                        ¿No tienes cuenta?{" "}
+                        <br></br>
+                        Comunícate con el administrador del sistema.
+                    </p>
+                    </div>
+                </>
             )}
-
-            <div className="text-center">
-                <a href="#recuperar" className="text-sm text-[#0F2C59] hover:underline font-medium">
-                ¿Olvidaste tu contraseña?
-                </a>
-            </div>
-
-            <Button type="submit" disabled={loading}>
-                {loading ? "Ingresando..." : "Ingresar"}
-            </Button>
-            </form>
-            
-            <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
-                ¿No tienes cuenta?{" "}
-                <br></br>
-                Comunícate con el administrador del sistema.
-            </p>
-            </div>
         </Card>
-
-        {/* Tarjeta de Usuarios de Prueba (Opcional, muy útil para desarrollo) *
-        <Card className="mt-4 p-3 sm:p-4 bg-gray-50 border-dashed">
-            <p className="text-xs text-gray-600 mb-2 font-semibold">
-            Datos de prueba sugeridos:
-            </p>
-            <div className="space-y-1 text-xs text-gray-500">
-            <p>• Trabajador: juan@utez.edu.mx</p>
-            <p>• Jefe: roberto@utez.edu.mx</p>
-            <p className="mt-2 italic">Contraseña: cualquiera</p>
-            </div>
-        </Card> */}
 
         {/* Avisos Legales y Seguridad */}
         <div className="mt-4 space-y-3">
@@ -122,13 +233,13 @@ export default function Login() {
             <div className="flex items-start gap-2 sm:gap-3">
                 <Shield className="text-amber-600 flex-shrink-0 mt-0.5 w-5 h-5" />
                 <div>
-                <p className="text-xs text-amber-800">
+                <p className="text-xs text-amber-800 mb-2">
                     <strong>Aviso de Seguridad:</strong> Este sistema NO está diseñado para recopilar información personal identificable (PII) sensible ni datos confidenciales. No ingrese información médica detallada, datos financieros o información altamente sensible.
                 </p>
                 <button
                     type="button"
                     onClick={() => setShowSecurityModal(true)}
-                    className="text-xs text-amber-700 underline hover:text-amber-900 break-words"
+                    className="text-xs mb-2 text-amber-700 underline hover:text-amber-900 break-words"
                 >
                     Ver más información de seguridad
                 </button>
@@ -285,6 +396,6 @@ export default function Login() {
             </div>
         </div>
         </Modal>
-    </div> //final de tu contenedor min-h-screen 
-  );
+    </div>
+    );
 }

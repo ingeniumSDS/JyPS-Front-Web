@@ -1,3 +1,4 @@
+import { forwardRef } from 'react';
 export const Input = forwardRef(({ label, error, className = '', ...props }, ref) => {
     return (
     <div className="w-full">
@@ -6,6 +7,7 @@ export const Input = forwardRef(({ label, error, className = '', ...props }, ref
             {label}
         </label>
         )}
+        
         <input
         ref={ref}
         className={`w-full px-4 py-3 border rounded-lg transition-colors duration-200 outline-none
