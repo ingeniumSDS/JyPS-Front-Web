@@ -1,7 +1,15 @@
+import { CrearUsuarioModal } from '../../components/modals/CrearUsuarioModal';
 import { useState } from 'react';
 import { Users, Search, Edit2, UserCheck, UserX, Building2, Phone, Mail, Plus } from 'lucide-react';
 import { Card } from '../../components/Card'; 
 import { Button } from '../../components/Button'; 
+
+// Un arreglo falso temporal de departamentos para que funcione el select 
+const MOCK_DEPARTAMENTOS = [
+    { id: '1', nombre: 'Recursos Humanos' },
+    { id: '2', nombre: 'Sistemas' },
+    { id: '3', nombre: 'Seguridad' }
+];
 
 // Datos falsos para probar el diseño
 const MOCK_USERS = [
@@ -11,6 +19,16 @@ const MOCK_USERS = [
 ];
 
 export default function GestionUsuarios() {
+    const [isCrearModalOpen, setIsCrearModalOpen] = useState(false);
+    // Función para atrapar los datos cuando le den a "Guardar Usuario"
+    const handleCrearUsuario = (nuevoUsuarioJSON) => {
+    console.log("JSON listo para mandar al backend:", nuevoUsuarioJSON);
+    // Aquí harás tu fetch/axios POST al backend
+    
+    // Cerramos el modal
+    setIsCrearModalOpen(false);
+    };
+
     const [usuarios, setUsuarios] = useState(MOCK_USERS);
     const [busqueda, setBusqueda] = useState('');
     const [filtroEstado, setFiltroEstado] = useState('todos'); 
@@ -48,9 +66,9 @@ export default function GestionUsuarios() {
                 <p className="text-gray-600 mt-1">Administrar usuarios del sistema</p>
             </div>
             <div className="w-full sm:w-auto">
-                <Button fullWidth={false} className="w-full sm:w-auto justify-center py-3 gap-2 bg-green-600 hover:bg-green-700">
+                <Button onClick={() => setIsCrearModalOpen(true)} fullWidth={false} className="w-full sm:w-auto justify-center py-3 gap-2 bg-green-600 hover:bg-green-700">
                     <Plus size={20} />
-                    <span>Crear Usuario</span>
+                    <span>Crear Usuario</span> 
                 </Button>
             </div>
         </div>
@@ -211,6 +229,14 @@ export default function GestionUsuarios() {
                 <p className="text-gray-500">Intenta con otros filtros o términos de búsqueda</p>
             </div>
         )}
+
+        <CrearUsuarioModal 
+        isOpen={isCrearModalOpen}
+        onClose={() => setIsCrearModalOpen(false)}
+        onSubmit={handleCrearUsuario}
+        departamentos={MOCK_DEPARTAMENTOS}
+        jefesActivos={[]} 
+    />
     </div>
     );
 }
