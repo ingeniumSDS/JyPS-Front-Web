@@ -20,9 +20,7 @@ export default function Recuperar() {
   // Código simulado para desarrollo
   const [generatedCode, setGeneratedCode] = useState('');
 
-  // ----------------------------------------------------
-  // MANEJADOR: Enviar Correo
-  // ----------------------------------------------------
+  // MANEJADOR: Enviar Correo--
   const handleEmailSubmit = (e) => {
     e.preventDefault();
     setError('');
@@ -53,9 +51,7 @@ export default function Recuperar() {
     }, 1000);
   };
 
-  // ----------------------------------------------------
-  // MANEJADOR:Ingresar Código
-  // ----------------------------------------------------
+  // MANEJADOR:Ingresar Código---
   // inputs
   const handleCodeChange = (index, value) => {
     // Solo permitir números
@@ -71,7 +67,7 @@ export default function Recuperar() {
       }
     }
   };
-  // delets (Detectar si se presiono la tecla de borrado )
+  // delets 
   const handleKeyDown = (index, e) => {
   if (e.key === 'Backspace') {
     if (!code[index] && index > 0) {

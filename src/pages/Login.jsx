@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
+import { Link, useNavigate } from 'react-router';
 import { Input } from "../components/Input";
 import { PasswordInput } from "../components/PasswordInput";
 import { Button } from "../components/Button";
 import { Card } from "../components/Card";
-import { GraduationCap, Shield, Info, AlertTriangle ,KeyRound, Mail, AlertCircle, FileText, ArrowRight, ShieldCheck, UserX, Clock  } from "lucide-react";
+import { GraduationCap, Shield, Info, AlertTriangle ,KeyRound, Mail, AlertCircle, FileText, ArrowRight, ShieldCheck, UserX, Clock, Link as LinkIcon } from "lucide-react";
 import { Modal } from "../components/Modal";
 
 const MAX_INTENTOS = 3;
@@ -206,9 +207,9 @@ export default function Login() {
                     )}
 
                     <div className="text-center">
-                        <a href="#recuperar" className="text-sm text-[#0F2C59] hover:underline font-medium">
+                        <Link to="/recuperar"  className="text-sm text-[#0F2C59] hover:underline font-medium">
                         ¿Olvidaste tu contraseña?
-                        </a>
+                        </Link>
                     </div>
 
                     <Button type="submit" disabled={loading} fullWidth>
