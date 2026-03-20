@@ -1,17 +1,18 @@
+import { useUsuarios } from '../../hooks/useUsuarios';
 import { CrearUsuarioModal } from '../../components/modals/CrearUsuarioModal';
 import { useState } from 'react';
 import { Users, Search, Edit2, UserCheck, UserX, Building2, Phone, Mail, Plus } from 'lucide-react';
 import { Card } from '../../components/Card'; 
 import { Button } from '../../components/Button'; 
 
-// Un arreglo falso temporal de departamentos para que funcione el select 
+// Arreglo falso temporal de departamentost 
 const MOCK_DEPARTAMENTOS = [
     { id: '1', nombre: 'Recursos Humanos' },
     { id: '2', nombre: 'Sistemas' },
     { id: '3', nombre: 'Seguridad' }
 ];
 
-// Datos falsos para probar el diseño
+// Datos falsos 
 const MOCK_USERS = [
     { id: '1', nombre: 'Juan Pérez', email: 'juan@jyps.com', rol: 'guardia', departamento: 'Seguridad', telefono: '5512345678', isActive: true },
     { id: '2', nombre: 'María García', email: 'maria@jyps.com', rol: 'recursos_humanos', departamento: 'Recursos Humanos', telefono: '5587654321', isActive: true },
@@ -19,14 +20,22 @@ const MOCK_USERS = [
 ];
 
 export default function GestionUsuarios() {
-    const [isCrearModalOpen, setIsCrearModalOpen] = useState(false);
-    // Función para atrapar los datos cuando le den a "Guardar Usuario"
-    const handleCrearUsuario = (nuevoUsuarioJSON) => {
-    console.log("JSON listo para mandar al backend:", nuevoUsuarioJSON);
-    // Aquí harás tu fetch/axios POST al backend
     
-    // Cerramos el modal
-    setIsCrearModalOpen(false);
+    const [isCrearModalOpen, setIsCrearModalOpen] = useState(false);
+    
+    // Instanciamos Hook de Dominio
+    const { crearUsuario, isLoading: isCreando } = useUsuarios();
+
+    // Función para manejar el formulario
+    const handleCrearUsuario = async (formData) => {
+        const resultado = await crearUsuario(formData);
+
+        if (resultado.exito) {
+            alert("Usuario creado exitosamente");
+            setIsCrearModalOpen(false); 
+        } else {
+            alert("Error al crear usuario: " + resultado.mensaje);
+        }
     };
 
     const [usuarios, setUsuarios] = useState(MOCK_USERS);
