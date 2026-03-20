@@ -16,6 +16,11 @@ const MOCK_DEPARTAMENTOS = [
 export default function GestionUsuarios() {
     
     const [isCrearModalOpen, setIsCrearModalOpen] = useState(false);
+    const [usuarioAEditar, setUsuarioAEditar] = useState(null);
+    const handleAbrirEditar = (usuario) => {
+    setUsuarioAEditar(usuario); 
+    setIsCrearModalOpen(true);  
+};
     
     //Arreglo vacio
     const [usuarios, setUsuarios] = useState([]);
@@ -41,15 +46,26 @@ export default function GestionUsuarios() {
     }, []);
 
     //Datos 
-    const handleCrearUsuario = async (formData) => {
-        const resultado = await crearUsuario(formData);
+    const handleGuardarUsuario = async (formData, idEdit) => {
+        if (idEdit) {
+            // MODO EDITAR 
+            console.log("SIMULANDO PUT - Datos a enviar al backend:", formData, "ID:", idEdit);
+        
+            alert("¡Modal de edición funcionando! (El PUT se conectará cuando el backend esté listo)");
+        
+            setIsCrearModalOpen(false);
+            setUsuarioAEditar(null); 
+        } else {
+            // MODO CREAR 
+            const resultado = await crearUsuario(formData);
 
-        if (resultado.exito) {
+            if (resultado.exito) {
             alert("Usuario creado exitosamente");
             setIsCrearModalOpen(false); 
-            cargarListaUsuarios();
-        } else {
+            cargarListaUsuarios(); 
+            } else {
             alert("Error al crear usuario: " + resultado.mensaje);
+            }
         }
     };
 
@@ -211,9 +227,12 @@ export default function GestionUsuarios() {
                                     {usuario.isActive ? 'Activo' : 'Inactivo'}
                                 </span>
                                 <div className="flex gap-2 w-full sm:w-auto">
-                                    <button className="flex-1 md:flex-none flex justify-center items-center gap-1.5 px-3 py-2 sm:py-1.5 border border-[#0F2C59] text-[#0F2C59] rounded-lg text-sm font-medium hover:bg-blue-50 transition-colors">
+                                    <button
+                                        onClick={() => handleAbrirEditar(usuario)}
+                                        className="flex-1 md:flex-none flex justify-center items-center gap-1.5 px-3 py-2 sm:py-1.5 border border-[#0F2C59] text-[#0F2C59] rounded-lg text-sm font-medium hover:bg-blue-50 transition-colors"
+                                        title="Editar"
+                                    >
                                         <Edit2 size={16} />
-                                        Editar
                                     </button>
                                     <button className={`flex-1 md:flex-none flex justify-center items-center gap-1.5 px-3 py-2 sm:py-1.5 border rounded-lg text-sm font-medium transition-colors ${
                                         usuario.isActive 
@@ -256,10 +275,13 @@ export default function GestionUsuarios() {
 
         <CrearUsuarioModal 
         isOpen={isCrearModalOpen}
-        onClose={() => setIsCrearModalOpen(false)}
-        onSubmit={handleCrearUsuario}
+        onClose={() => {
+            setIsCrearModalOpen(false);
+            setUsuarioAEditar(null);
+        }}
+        onSubmit={handleGuardarUsuario}
         departamentos={MOCK_DEPARTAMENTOS}
-        jefesActivos={[]} 
+        usuarioAEditar={usuarioAEditar}
     />
     </div>
     );

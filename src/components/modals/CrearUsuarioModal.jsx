@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, UserPlus, Clock, Mail, Phone, Building2, Shield, Send, User, AlertCircle } from 'lucide-react';
+import { X, UserPlus, Clock, Mail, Phone, Building2, Shield, Send, User, AlertCircle, Edit } from 'lucide-react';
 
 const ROLES_DISPONIBLES = [
     { value: 'ADMINISTRADOR', label: 'Administrador' },
@@ -9,7 +9,7 @@ const ROLES_DISPONIBLES = [
     { value: 'GUARDIA', label: 'Guardia de Seguridad' }
 ];
 
-export function CrearUsuarioModal({ isOpen, onClose, onSubmit, departamentos = [] }) {
+export function CrearUsuarioModal({ isOpen, onClose, onSubmit, departamentos = [], usuarioAEditar = null }) {
     const estadoInicial = {
         nombre: "",
         apellidoPaterno: "",
@@ -27,10 +27,28 @@ export function CrearUsuarioModal({ isOpen, onClose, onSubmit, departamentos = [
     const [isLoading, setIsLoading] = useState(false);
     const [mostrarErrorGeneral, setMostrarErrorGeneral] = useState(false);
 
-    // Bloquear scroll al abrir
+    //creamos o editamos
     useEffect(() => {
         if (isOpen) {
-            setFormData(estadoInicial);
+            if (usuarioAEditar) {
+                // MODO EDITAR
+                setFormData({
+                    // Control de datos
+                    nombre: usuarioAEditar.nombreOriginal || usuarioAEditar.nombre.split(' ')[0] || "",
+                    apellidoPaterno: usuarioAEditar.apellidoPaterno || usuarioAEditar.nombre.split(' ')[1] || "",
+                    apellidoMaterno: usuarioAEditar.apellidoMaterno || usuarioAEditar.nombre.split(' ')[2] || "",
+                    correo: usuarioAEditar.email || "",
+                    telefono: usuarioAEditar.telefono || "",
+                    horaEntrada: usuarioAEditar.horaEntrada ? usuarioAEditar.horaEntrada.substring(0,5) : "08:00", 
+                    horaSalida: usuarioAEditar.horaSalida ? usuarioAEditar.horaSalida.substring(0,5) : "16:00",
+                    roles: usuarioAEditar.rolesOriginales || [usuarioAEditar.rol.toUpperCase()] || [],
+                    departamentoId: usuarioAEditar.departamentoId || ""
+                });
+            } else {
+                // MODO CREAR
+                setFormData(estadoInicial);
+            }
+            
             setErrores({});
             setMostrarErrorGeneral(false);
             document.body.style.overflow = 'hidden';
@@ -38,18 +56,14 @@ export function CrearUsuarioModal({ isOpen, onClose, onSubmit, departamentos = [
             document.body.style.overflow = 'unset';
         }
         return () => { document.body.style.overflow = 'unset'; };
-    }, [isOpen]);
+    }, [isOpen, usuarioAEditar]); 
 
-    // --- REGLAS DE NEGOCIO ---
+    // REGLAS DE NEGOCIO 
     const hasRole = (role) => formData.roles.includes(role);
-    
-    // Si es guardia NO necesita departamento. Los demás sí.
     const necesitaDepartamento = hasRole('EMPLEADO') || hasRole('ADMINISTRADOR') || hasRole('RECURSOS_HUMANOS') || hasRole('JEFE_DEPARTAMENTO');
-    
-    // Todos menos el guardia necesitan horario (Ajusta esto si el guardia sí lo necesita)
     const necesitaHorario = necesitaDepartamento; 
 
-    // --- VALIDACIONES EN TIEMPO REAL ---
+    // VALIDACIONES EN TIEMPO REAL
     const validarCampo = (name, value) => {
         let error = null;
 
@@ -98,7 +112,7 @@ export function CrearUsuarioModal({ isOpen, onClose, onSubmit, departamentos = [
         }
     }, [formData.horaEntrada, formData.horaSalida]);
 
-    // --- MANEJADORES DE EVENTOS ---
+    // MANEJADORES DE EVENTOS
     const handleChange = (e) => {
         const { name, value } = e.target;
         let newValue = value;
@@ -138,7 +152,7 @@ export function CrearUsuarioModal({ isOpen, onClose, onSubmit, departamentos = [
         });
     };
 
-    // --- VALIDACIÓN FINAL ---
+    // VALIDACIÓN FINAL
     const validarFormulario = () => {
         const nuevosErrores = { ...errores };
         let isValid = true;
@@ -150,7 +164,6 @@ export function CrearUsuarioModal({ isOpen, onClose, onSubmit, departamentos = [
         if (!formData.telefono || formData.telefono.length !== 10) nuevosErrores.telefono = "Faltan dígitos";
         if (formData.roles.length === 0) nuevosErrores.roles = "Seleccione al menos un rol";
 
-        // Si la lógica dice que necesita departamento y está vacío, marca error
         if (necesitaDepartamento && !formData.departamentoId) {
             nuevosErrores.departamentoId = "Seleccione un departamento";
         }
@@ -174,9 +187,9 @@ export function CrearUsuarioModal({ isOpen, onClose, onSubmit, departamentos = [
 
         setIsLoading(true);
         try {
-            await onSubmit(formData); // Llama a la función del padre (tu Fetch)
+            await onSubmit(formData, usuarioAEditar?.id); 
         } catch (error) {
-            console.error("El servidor rechazó los datos", error);
+            console.error("Error al procesar el formulario", error);
         } finally {
             setIsLoading(false);
         }
@@ -185,23 +198,26 @@ export function CrearUsuarioModal({ isOpen, onClose, onSubmit, departamentos = [
     if (!isOpen) return null;
 
     const tieneErrores = Object.keys(errores).length > 0;
+    
+    const esModoEditar = usuarioAEditar !== null;
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
             <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden relative">
                 
-                {/* CABECERA */}
+                {/* CABECERA DINÁMICA */}
                 <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10">
                     <div className="flex items-center gap-2 text-[#0F2C59]">
-                        <UserPlus size={24} />
-                        <h2 className="text-xl font-bold">Crear Nuevo Usuario</h2>
+                        {esModoEditar ? <Edit size={24} /> : <UserPlus size={24} />}
+                        <h2 className="text-xl font-bold">
+                            {esModoEditar ? 'Editar Usuario' : 'Crear Nuevo Usuario'}
+                        </h2>
                     </div>
                     <button onClick={onClose} disabled={isLoading} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg">
                         <X size={20} />
                     </button>
                 </div>
 
-                {/* CUERPO DEL FORMULARIO */}
                 <div id="modal-scroll-container" className="p-6 overflow-y-auto custom-scrollbar flex-1 bg-gray-50/30">
                     <form id="crear-usuario-form" onSubmit={handleSubmit} className="space-y-6">
                         
@@ -212,7 +228,7 @@ export function CrearUsuarioModal({ isOpen, onClose, onSubmit, departamentos = [
                             </div>
                         )}
 
-                        {/* SECCIÓN 1: Datos Personales */}
+                        {/* Datos Personales */}
                         <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm space-y-4">
                             <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wider flex items-center gap-2 pb-2 border-b border-gray-100">
                                 <User size={16} className="text-[#0F2C59]"/> Datos Personales
@@ -250,7 +266,7 @@ export function CrearUsuarioModal({ isOpen, onClose, onSubmit, departamentos = [
                             </div>
                         </div>
 
-                        {/* SECCIÓN 2: Sistema */}
+                        {/* Sistema */}
                         <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm space-y-4">
                             <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wider flex items-center gap-2 pb-2 border-b border-gray-100">
                                 <Shield size={16} className="text-[#0F2C59]"/> Roles y Asignaciones
@@ -270,7 +286,7 @@ export function CrearUsuarioModal({ isOpen, onClose, onSubmit, departamentos = [
                                 {errores.roles && <p className="text-xs text-red-500 mt-1">{errores.roles}</p>}
                             </div>
 
-                            {/* DEPARTAMENTO (Condicionado) */}
+                            {/* DEPARTAMENTO*/}
                             {necesitaDepartamento && (
                                 <div className="mt-4 animate-in fade-in duration-300">
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -278,7 +294,6 @@ export function CrearUsuarioModal({ isOpen, onClose, onSubmit, departamentos = [
                                     </label>
                                     <select name="departamentoId" value={formData.departamentoId} onChange={handleChange} disabled={isLoading} className={`w-full px-4 py-2 border rounded-lg bg-white outline-none transition-all ${errores.departamentoId ? 'border-red-400 focus:ring-2 focus:ring-red-200' : 'border-gray-300 focus:border-[#0F2C59] focus:ring-2 focus:ring-[#0F2C59]/20'}`}>
                                         <option value="">Seleccione un departamento...</option>
-                                        {/* Aquí mapeamos correctamente el prop 'departamentos' que viene del padre */}
                                         {departamentos.map(depto => (
                                             <option key={depto.id} value={depto.id}>{depto.nombre}</option>
                                         ))}
@@ -287,7 +302,7 @@ export function CrearUsuarioModal({ isOpen, onClose, onSubmit, departamentos = [
                                 </div>
                             )}
 
-                            {/* HORARIOS (Condicionado) */}
+                            {/* HORARIOS */}
                             {necesitaHorario && (
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 animate-in fade-in duration-300">
                                     <div>
@@ -303,27 +318,28 @@ export function CrearUsuarioModal({ isOpen, onClose, onSubmit, departamentos = [
                             )}
                         </div>
 
-                        {/* AVISO */}
-                        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                            <div className="flex items-start gap-3">
-                                <Send className="text-blue-600 mt-1" size={18} />
-                                <div>
-                                    <h4 className="font-medium text-blue-900 mb-1">Contraseña Generada Automáticamente</h4>
-                                    <p className="text-sm text-blue-700">Se enviará una contraseña al correo institucional.</p>
+                        {/* AVISO DINÁMICO */}
+                        {!esModoEditar && (
+                            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                                <div className="flex items-start gap-3">
+                                    <Send className="text-blue-600 mt-1" size={18} />
+                                    <div>
+                                        <h4 className="font-medium text-blue-900 mb-1">Contraseña Generada Automáticamente</h4>
+                                        <p className="text-sm text-blue-700">Se enviará una contraseña al correo institucional.</p>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-
+                        )}
                     </form>
                 </div>
 
-                {/* BOTONES */}
+                {/* BOTONES DINÁMICOS */}
                 <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3 bg-white">
                     <button type="button" onClick={onClose} disabled={isLoading} className="px-6 py-2.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg">
                         Cancelar
                     </button>
-                    <button type="submit" form="crear-usuario-form" disabled={isLoading || tieneErrores} className="px-6 py-2.5 text-sm font-medium text-white bg-green-600 hover:bg-green-700 disabled:bg-green-400 rounded-lg">
-                        {isLoading ? 'Creando...' : 'Crear Usuario'}
+                    <button type="submit" form="crear-usuario-form" disabled={isLoading || tieneErrores} className="px-6 py-2.5 text-sm font-medium text-white bg-[#0F2C59] hover:bg-[#0F2C59]/90 disabled:bg-gray-400 rounded-lg">
+                        {isLoading ? 'Procesando...' : (esModoEditar ? 'Guardar Cambios' : 'Crear Usuario')}
                     </button>
                 </div>
             </div>
