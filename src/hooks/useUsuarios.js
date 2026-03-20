@@ -1,8 +1,10 @@
 import { useApi } from './useApi';
 
 export const useUsuarios = () => {
+
     const { request, isLoading } = useApi();
 
+    //POST
     const crearUsuario = async (formData) => {
         try {
             //JSON
@@ -17,9 +19,7 @@ export const useUsuarios = () => {
                 roles: formData.roles,
                 departamentoId: Number(formData.departamentoId) 
             };
-
             const respuesta = await request('/usuarios', 'POST', payload);
-            
             return { exito: true, data: respuesta };
             
         } catch (err) {
@@ -28,8 +28,39 @@ export const useUsuarios = () => {
         }
     };
 
+    //GET
+    const obtenerUsuarios = async () => {
+        try {
+            const respuesta = await request('/usuarios', 'GET');
+            
+            console.log("Datos puros del backend:", respuesta);
+
+            // Verificamos
+            const usuariosBackend = Array.isArray(respuesta) ? respuesta : (respuesta.data || []);
+
+            const usuariosFormateados = usuariosBackend.map(user => ({
+                id: user.id || Math.random().toString(),
+                nombre: `${user.nombre} ${user.apellidoPaterno} ${user.apellidoMaterno || ''}`.trim(),
+                email: user.correo,
+                rol: user.roles && user.roles.length > 0 ? user.roles[0].toLowerCase() : 'sin_rol',
+                //Departamento
+                departamento: user.departamento ? user.departamento.nombre : `Depto ${user.departamentoId}`,
+                telefono: user.telefono,
+                isActive: user.estatus !== undefined ? user.estatus : true 
+            }));
+
+            return { exito: true, data: usuariosFormateados };
+
+        } catch (err) {
+            console.error("Error en useUsuarios (obtener):", err);
+            return { exito: false, mensaje: err.message };
+        }
+    };
+
     return { 
-        crearUsuario, 
+        crearUsuario,
+        obtenerUsuarios, 
         isLoading 
     };
 };
+

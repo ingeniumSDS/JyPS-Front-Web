@@ -1,44 +1,59 @@
-import { useUsuarios } from '../../hooks/useUsuarios';
+import { useUsuarios,  } from '../../hooks/useUsuarios';
 import { CrearUsuarioModal } from '../../components/modals/CrearUsuarioModal';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Users, Search, Edit2, UserCheck, UserX, Building2, Phone, Mail, Plus } from 'lucide-react';
 import { Card } from '../../components/Card'; 
 import { Button } from '../../components/Button'; 
 
-// Arreglo falso temporal de departamentost 
+// Arreglo Departamentos
 const MOCK_DEPARTAMENTOS = [
     { id: '1', nombre: 'Recursos Humanos' },
     { id: '2', nombre: 'Sistemas' },
     { id: '3', nombre: 'Seguridad' }
 ];
 
-// Datos falsos 
-const MOCK_USERS = [
-    { id: '1', nombre: 'Juan Pérez', email: 'juan@jyps.com', rol: 'guardia', departamento: 'Seguridad', telefono: '5512345678', isActive: true },
-    { id: '2', nombre: 'María García', email: 'maria@jyps.com', rol: 'recursos_humanos', departamento: 'Recursos Humanos', telefono: '5587654321', isActive: true },
-    { id: '3', nombre: 'Carlos López', email: 'carlos@jyps.com', rol: 'trabajador', departamento: 'Sistemas', telefono: '5511223344', isActive: false },
-];
 
 export default function GestionUsuarios() {
     
     const [isCrearModalOpen, setIsCrearModalOpen] = useState(false);
     
-    // Instanciamos Hook de Dominio
-    const { crearUsuario, isLoading: isCreando } = useUsuarios();
+    //Arreglo vacio
+    const [usuarios, setUsuarios] = useState([]);
+    const [isCargandoInicial, setIsCargandoInicial] = useState(true);
+    
+    //Hook de Dominio
+    const { crearUsuario, obtenerUsuarios, isLoading: isCreando } = useUsuarios();
+    const cargarListaUsuarios = async () => {
+        setIsCargandoInicial(true);
+        const resultado = await obtenerUsuarios();
+        
+        if (resultado.exito) {
+            setUsuarios(resultado.data);
+        } else {
+            // Alerta
+            console.error("Error al cargar la lista:", resultado.mensaje); 
+        }
+        setIsCargandoInicial(false);
+    };
+    
+    useEffect(() => {
+        cargarListaUsuarios();
+    }, []);
 
-    // Función para manejar el formulario
+    //Datos 
     const handleCrearUsuario = async (formData) => {
         const resultado = await crearUsuario(formData);
 
         if (resultado.exito) {
             alert("Usuario creado exitosamente");
             setIsCrearModalOpen(false); 
+            cargarListaUsuarios();
         } else {
             alert("Error al crear usuario: " + resultado.mensaje);
         }
     };
 
-    const [usuarios, setUsuarios] = useState(MOCK_USERS);
+    // FILTROS
     const [busqueda, setBusqueda] = useState('');
     const [filtroEstado, setFiltroEstado] = useState('todos'); 
     const [filtroDepartamento, setFiltroDepartamento] = useState('todos');
@@ -68,7 +83,7 @@ export default function GestionUsuarios() {
 
     return (
     <div className="space-y-6">
-        {/* HEADER Y BOTÓN */}
+        {/* HEADER Y BOTON */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
                 <h1 className="text-2xl font-bold text-[#0F2C59]">Gestión de Usuarios</h1>
@@ -82,7 +97,7 @@ export default function GestionUsuarios() {
             </div>
         </div>
 
-        {/* ESTADÍSTICAS */}
+        {/* ESTADISTICAS */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
             <Card className="p-6 flex items-center gap-4 border-none shadow-sm">
                 <div className="p-3 bg-blue-50 text-blue-600 rounded-lg"><Users size={24} /></div>
@@ -109,7 +124,7 @@ export default function GestionUsuarios() {
             </Card>
         </div>
 
-        {/* BÚSQUEDA Y FILTROS */}
+        {/* BUSQUEDA Y FILTROS */}
         <Card className="p-4 flex flex-col gap-4 border-none shadow-sm bg-white">
             {/* Buscador */}
             <div className="relative flex-1 w-full">
@@ -212,7 +227,7 @@ export default function GestionUsuarios() {
                             </div>
                         </div>
 
-                        {/* INFORMACIÓN DE CONTACTO */}
+                        {/* INFORMACION DE CONTACTO */}
                         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-9 mt-4 pt-4 border-t border-gray-100">
                             <div className="flex items-center gap-2.5 text-sm text-gray-600 w-full sm:w-auto">
                                 <Mail size={16} className="text-gray-400 flex-shrink-0" />
@@ -228,7 +243,7 @@ export default function GestionUsuarios() {
             ))}
         </div>
         
-        {/* Mensaje si no hay resultados */}
+        {/* Sin resultados */}
         {usuariosFiltrados.length === 0 && (
             <div className="text-center py-16 bg-white rounded-xl border border-gray-100 shadow-sm">
                 <div className="bg-gray-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
