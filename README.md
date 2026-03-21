@@ -1,83 +1,77 @@
-# 👥 Panel de Administración de Usuarios (User Management Dashboard)
+# JyPS Front Web - Panel de Administración
 
-![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)
-![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white)
-![Vite](https://img.shields.io/badge/vite-%23646CFF.svg?style=for-the-badge&logo=vite&logoColor=white)
+![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=Vite&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
 
-Una aplicación frontend moderna y escalable diseñada para la gestión integral del ciclo de vida de los usuarios (CRUD). Este proyecto no solo se enfoca en la funcionalidad, sino en aplicar **buenas prácticas de Ingeniería de Software**, código limpio (Clean Code) y una arquitectura altamente mantenible.
+**JyPS Front Web** es una aplicación Frontend de página única (SPA) diseñada para la gestión y administración de recursos y usuarios. Construida con un enfoque estricto en **Clean Code, escalabilidad y Experiencia de Usuario (UX)**, utilizando las tecnologías más modernas del ecosistema web.
 
-## ✨ Características Principales
+---
 
-* **Gestión Integral (CRUD):** Creación, lectura y edición de usuarios conectados a una API REST.
-* **Filtros Avanzados en Tiempo Real:** Búsqueda multicriterio (por nombre, correo, rol, departamento y estado) sin recargar la página.
-* **Validaciones Dinámicas:** Feedback visual instantáneo en formularios (validación de correos institucionales, longitud de texto y formatos numéricos).
-* **Diseño Responsivo (Mobile-First):** Interfaz construida con Tailwind CSS, garantizando fluidez desde dispositivos móviles hasta pantallas de escritorio.
+## 📖 Tabla de Contenidos
+1. [Sobre el Proyecto](#-sobre-el-proyecto)
+2. [Stack Tecnológico](#-stack-tecnológico)
+3. [Arquitectura y Patrones de Diseño](#-arquitectura-y-patrones-de-diseño)
+4. [Estructura del Proyecto](#-estructura-del-proyecto)
+5. [Instalación y Despliegue](#-instalación-y-despliegue)
+6. [Capturas de Pantalla](#-capturas-de-pantalla)
+7. [Estructura del Proyecto](#-estructura-del-proyecto)
+---
+
+## 🎯 Sobre el Proyecto
+
+El objetivo de este proyecto es proporcionar una interfaz administrativa robusta, rápida y responsiva. Actualmente cuenta con un **Módulo de Gestión de Usuarios** altamente dinámico, que permite realizar operaciones CRUD completas, filtrado inteligente en tiempo real y validaciones complejas de formularios.
+
+**Características principales:**
+* **Gestión de Estado Eficiente:** Uso de Hooks de React para manejar datos complejos sin sobrecargar el DOM.
+* **Componentes Inteligentes y Tontos:** Reutilización del 100% de la interfaz visual para diferentes contextos (ej. un mismo modal sirve para Crear y Editar adaptando su comportamiento).
+* **Filtros Multicriterio:** Búsqueda en tiempo real por texto, estado, departamento y roles.
+* **Responsive Design:** Adaptabilidad total desde dispositivos móviles hasta pantallas de escritorio.
+
+---
+
+## 🛠️ Stack Tecnológico
+
+El proyecto está construido con herramientas modernas para garantizar un rendimiento óptimo:
+
+* **Core:** React 18 (Hooks, Functional Components).
+* **Build Tool:** Vite (Para un HMR ultrarrápido y builds optimizados).
+* **Estilos:** Tailwind CSS (Utility-first CSS para diseños a medida rápidos).
+* **Iconografía:** Lucide React (Íconos SVG ligeros y consistentes).
+* **Peticiones HTTP:** Fetch API nativa envuelta en Custom Hooks asíncronos.
+
+---
 
 ## 🏗️ Arquitectura y Patrones de Diseño
 
-El proyecto fue construido siguiendo principios de **Clean Architecture** adaptados al ecosistema de React, dividiendo la aplicación en tres capas estrictas (Separation of Concerns):
+Para garantizar que el código sea mantenible a largo plazo, el proyecto implementa una versión adaptada de **Clean Architecture** para Frontend:
 
-1. **Capa de Infraestructura (`useApi.js`):** Un motor HTTP agnóstico. Se encarga exclusivamente de las peticiones de red, inyección de headers, manejo de CORS y parseo seguro de respuestas (evitando fallos por JSON vacíos en status 201/204).
-2. **Capa de Dominio/Servicios (`useUsuarios.js`):** Contiene la lógica de negocio. Actúa como un **Patrón Adaptador (Mapper)**, transformando los modelos de datos crudos del backend en modelos amigables para el frontend, aislando a la UI de futuros cambios en la API.
-3. **Capa de Presentación (Componentes y Modales):** Componentes dedicados 100% a la UI. 
+### 1. Separación de Responsabilidades (Separation of Concerns)
+Hemos dividido la lógica en 3 capas distintas:
+* **Capa de Vista (`/pages` y `/components`):** Componentes puramente visuales. No saben de dónde vienen los datos, solo saben cómo dibujarlos.
+* **Capa de Dominio (`/hooks/useUsuarios.js`):** Contiene la lógica de negocio y actúa como un **Mapper/Adaptador**. Transforma los datos crudos del backend en un formato limpio que la Vista necesita.
+* **Capa de Infraestructura (`/hooks/useApi.js`):** Un motor HTTP agnóstico centralizado que maneja cabeceras, CORS, parseo de JSON y manejo de errores (try/catch globales).
 
-### Patrones de Diseño Implementados:
-* **Container / Presenter Pattern:** Separación entre componentes que manejan el estado global (`GestionUsuarios.jsx`) y componentes "tontos" que solo dibujan la UI y emiten eventos (`CrearUsuarioModal.jsx`).
-* **Principio DRY (Don't Repeat Yourself):** Reutilización del 100% del componente modal y sus validaciones tanto para la **Creación (POST)** como para la **Edición (PUT)** mediante la inyección de propiedades dinámicas (`usuarioAEditar`).
+### 2. Diagrama de Flujo Arquitectónico
+![Arquitectura](./src/assets/Arquitectura.png)
 
-## 📊 Flujo de Datos y Reutilización de Componentes
-
-El siguiente diagrama ilustra cómo la vista principal delega la responsabilidad al modal inteligente, el cual adapta su comportamiento según el contexto (Crear vs Editar):
-
-```mermaid
-graph TD
-    A[Vista: GestionUsuarios] -->|Clic en 'Nuevo'| B(Estado: usuarioAEditar = null)
-    A -->|Clic en 'Editar'| C(Estado: usuarioAEditar = datosUsuario)
-    
-    B --> D{CrearUsuarioModal}
-    C --> D
-    
-    D -->|useEffect| E{¿Tiene datos?}
-    
-    E -->|No| F[Modo CREACIÓN<br/>Inputs Vacíos]
-    E -->|Sí| G[Modo EDICIÓN<br/>Inputs Pre-llenados]
-    
-    F --> H[Validaciones en Tiempo Real]
-    G --> H
-    
-    H -->|Submit válido| I[Hook: useUsuarios]
-    
-    I -->|POST /usuarios| J[(Backend REST API)]
-    I -->|PUT /usuarios/:id| J
-
-    ```markdown
 ## 📁 Estructura del Proyecto
-
-\`\`\`text
-src/
- ├── components/       # Componentes visuales reutilizables (Botones, Cards, Modales)
- │    └── modals/      # Modales inteligentes (ej. CrearUsuarioModal.jsx)
- ├── hooks/            # Custom Hooks (Lógica de negocio e infraestructura)
- │    ├── useApi.js    # Fetch wrapper centralizado
- │    └── useUsuarios.js # Capa de dominio (Adaptadores y endpoints)
- ├── pages/            # Vistas principales (ej. GestionUsuarios.jsx)
- └── App.jsx           # Enrutamiento principal
-\`\`\`
-
-## 🚀 Instalación y Despliegue Local
-
-1. Clona el repositorio:
-   \`\`\`bash
-   git clone https://github.com/TU_USUARIO/TU_REPOSITORIO.git
-   \`\`\`
-2. Instala las dependencias:
-   \`\`\`bash
-   npm install
-   \`\`\`
-3. Configura las variables de entorno:
-   * Crea un archivo `.env` en la raíz.
-   * Agrega la URL del backend: `VITE_API_BASE_URL=tu_url_aqui`
-4. Ejecuta el servidor de desarrollo:
-   \`\`\`bash
-   npm run dev
-   \`\`\`
+#### El código fuente está organizado de forma semántica para facilitar la escalabilidad:
+```text
+└── 📦 src
+    ├── 📂 assets          
+    ├── 📂 components      
+    ├── 📂 modals       
+    │   └── 📜 Card.jsx, Button.jsx, etc.
+    ├── 📂 hooks           
+    │   ├── 📜 useApi.js    
+    │   └── 📜 useUsuarios.js 
+    ├── 📂 pages          
+    │   └── 📂 administrador 
+    │       ├── 📜 AdministradorLayout.jsx
+    │       └── 📜 GestionUsuarios.jsx
+    ├── 📜 App.jsx         
+    ├── 📜 main.jsx        
+    └── 📜 index.css   
+```
