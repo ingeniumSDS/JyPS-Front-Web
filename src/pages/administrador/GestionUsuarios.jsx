@@ -1,7 +1,8 @@
+import ConfirmModal from '../../components/modals/ConfirmModal';
 import { useUsuarios,  } from '../../hooks/useUsuarios';
 import { CrearUsuarioModal } from '../../components/modals/CrearUsuarioModal';
 import { useState, useEffect } from 'react';
-import { Users, Search, Edit2, UserCheck, UserX, Building2, Phone, Mail, Plus } from 'lucide-react';
+import { Users, Search, Edit2, UserCheck, UserX, Building2, Phone, Mail, Plus,Check, X as XIcon, HelpingHand } from 'lucide-react';
 import { Card } from '../../components/Card'; 
 import { Button } from '../../components/Button'; 
 
@@ -14,14 +15,55 @@ const MOCK_DEPARTAMENTOS = [
 
 
 export default function GestionUsuarios() {
+
+    // Estado para controlar el modal de confirmación
+    const [confirmModal, setConfirmModal] = useState({
+        isOpen: false,
+        usuarioId: null,
+        accion: '', 
+        title: '',
+        message: ''
+    });
     
     const [isCrearModalOpen, setIsCrearModalOpen] = useState(false);
     const [usuarioAEditar, setUsuarioAEditar] = useState(null);
     const handleAbrirEditar = (usuario) => {
-    setUsuarioAEditar(usuario); 
-    setIsCrearModalOpen(true);  
-};
+        setUsuarioAEditar(usuario); 
+        setIsCrearModalOpen(true);  
+    };
     
+    //Modal Activar-Desactivar
+    const handleToggleEstado = (usuario) => {
+        const estaActivo = usuario.isActive; 
+
+        setConfirmModal({
+            isOpen: true,
+            usuarioId: usuario.id,
+            accion: estaActivo ? 'desactivar' : 'activar',
+            title: estaActivo ? 'Confirmar Desactivación' : 'Confirmar Activación',
+            message: estaActivo 
+            ? '¿Estás seguro de que quieres desactivar esta cuenta?' 
+            : '¿Estás seguro de que quieres reactivar esta cuenta?'
+        });
+    };
+
+    // Cambio de estado
+    const ejecutarCambioEstado = async () => {
+        try {
+          //LLAMADA A LA API
+            console.log(`Ejecutando ${confirmModal.accion} para el usuario ${confirmModal.usuarioId}`);
+    
+           //éxito:
+            alert(`¡Usuario ${confirmModal.accion === 'activar' ? 'activado' : 'desactivado'} con éxito!`);
+            setConfirmModal({ ...confirmModal, isOpen: false });
+    
+           // llamar a tu API para recargar la tabla:
+           // fetchUsuarios();
+        } catch (error) {
+            console.error("Error al cambiar el estado:", error);
+        }
+    };
+
     //Arreglo vacio
     const [usuarios, setUsuarios] = useState([]);
     const [isCargandoInicial, setIsCargandoInicial] = useState(true);
@@ -234,14 +276,21 @@ export default function GestionUsuarios() {
                                     >
                                         <Edit2 size={16} />
                                     </button>
-                                    <button className={`flex-1 md:flex-none flex justify-center items-center gap-1.5 px-3 py-2 sm:py-1.5 border rounded-lg text-sm font-medium transition-colors ${
-                                        usuario.isActive 
-                                        ? 'border-red-500 text-red-600 hover:bg-red-50' 
-                                        : 'border-green-500 text-green-600 hover:bg-green-50'
-                                    }`}>
-                                        {usuario.isActive ? <UserX size={16} /> : <UserCheck size={16} />}
-                                        {usuario.isActive ? 'Desactivar' : 'Activar'}
-                                    </button>
+                                        {usuario.isActive ?(
+                                            <button
+                                                onClick={() => handleToggleEstado(usuario)}
+                                                className='flex items-center gap-1 px-4 py-2 border border-red-600 text-red-600 rounded-md hover:bg-red-50 transition-colors font-medium'
+                                            >
+                                            <XIcon size={18}/> Desactivar
+                                        </button>
+                                        ):(
+                                            <button
+                                                onClick={() => handleToggleEstado(usuario)}
+                                                className="flex items-center gap-1 px-4 py-2 border border-green-600 text-green-600 rounded-md hover:bg-green-50 transition-colors font-medium"
+                                            >
+                                            <Check size={18}/> Activar
+                                        </button>
+                                        )}
                                 </div>
                             </div>
                         </div>
@@ -273,16 +322,26 @@ export default function GestionUsuarios() {
             </div>
         )}
 
+        {/*Modales*/}
         <CrearUsuarioModal 
-        isOpen={isCrearModalOpen}
-        onClose={() => {
+            isOpen={isCrearModalOpen}
+            onClose={() => {
             setIsCrearModalOpen(false);
             setUsuarioAEditar(null);
         }}
-        onSubmit={handleGuardarUsuario}
-        departamentos={MOCK_DEPARTAMENTOS}
-        usuarioAEditar={usuarioAEditar}
-    />
+            onSubmit={handleGuardarUsuario}
+            departamentos={MOCK_DEPARTAMENTOS}
+            usuarioAEditar={usuarioAEditar}
+        />
+
+        <ConfirmModal
+            isOpen={confirmModal.isOpen}
+            onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+            onConfirm={ejecutarCambioEstado}
+            title={confirmModal.title}
+            message={confirmModal.message}
+            type={confirmModal.accion === 'desactivar' ? 'danger' : 'success'}
+        />
     </div>
     );
 }
