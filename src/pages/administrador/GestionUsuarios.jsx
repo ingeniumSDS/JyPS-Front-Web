@@ -16,6 +16,30 @@ const MOCK_DEPARTAMENTOS = [
 
 export default function GestionUsuarios() {
 
+    //Color por rol
+    const obtenerColorRol = (rol) => {
+    const rolNormalizado = String(rol).toLowerCase();
+    
+    switch (rolNormalizado) {
+        case 'administrador':
+        case 'admin':
+            return 'bg-red-200 text-red-700 ';
+        case 'jefe_de_departamento':
+        case 'jefe':
+            return 'bg-purple-200 text-purple-700 ';
+        case 'recursos_humanos':
+        case 'rh':
+            return 'bg-green-200 text-green-100';
+        case 'empleado':
+        case 'usuario':
+            return 'bg-blue-200 text-blue-700 ';
+        case 'seguridad': 
+            return 'bg-amber200 text-amber-700';        
+        default:
+            return 'bg-slate-100 text-slate-700';
+    }
+};
+
     // Estado para controlar el modal de confirmación
     const [confirmModal, setConfirmModal] = useState({
         isOpen: false,
@@ -140,7 +164,7 @@ export default function GestionUsuarios() {
     });
 
     return (
-    <div className="space-y-6">
+    <div className="space-y-6 ">
         {/* HEADER Y BOTON */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
@@ -233,7 +257,7 @@ export default function GestionUsuarios() {
         </Card>
 
         {/* LISTA DE USUARIOS */}
-        <div className="grid grid-cols-1 gap-6">
+        <div className="grid grid-cols-1 gap-6 ">
             {usuariosFiltrados.map((usuario) => (
                 <Card key={usuario.id} className="overflow-hidden hover:shadow-md transition-shadow duration-300 border-gray-200 flex flex-col rounded-xl">
                     <div className="p-4 sm:p-5 flex-1">
@@ -247,8 +271,8 @@ export default function GestionUsuarios() {
                                     <h3 className="text-lg font-bold text-[#0F2C59] truncate">{usuario.nombre}</h3>
                                     {/* Rol y Departamento*/}
                                     <div className="flex flex-wrap items-center gap-2 mt-1.5">
-                                        <span className="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full capitalize whitespace-nowrap">
-                                            {usuario.rol.replace('_', ' ')}
+                                        <span className={`px-3 py-1 border text-xs font-medium rounded-full capitalize whitespace-nowrap ${obtenerColorRol(usuario.rol)}`}>
+                                            {usuario.rol.replace(/_/g, ' ')}
                                         </span>
                                         <div className="flex items-center gap-1.5 px-3 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded-full whitespace-nowrap">
                                             <Building2 size={14} className="text-gray-500" />
