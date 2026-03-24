@@ -37,5 +37,23 @@ export const router = createBrowserRouter([
       }
       
     ]
+    },
+    {
+      path: "/trabajador",
+      element : <TrabajadorLayout/>,
+      children:[
+        {
+        index: true,
+        element: <DashboardTrabajador/>
+        },
+        {
+          path: "pase", 
+          element: <SolicitarPase/>
+        },
+        {
+          path: "justificante",
+          element: <SolicitarJustificante/>
+        }
+      ]
     }
 ]);
