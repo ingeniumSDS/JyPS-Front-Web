@@ -40,10 +40,10 @@ export const useUsuarios = () => {
 
             const usuariosFormateados = usuariosBackend.map(user => ({
                 id: user.id || Math.random().toString(),
-                nombre: `${user.nombre} ${user.apellidoPaterno} ${user.apellidoMaterno || ''}`.trim(),
+                nombreCompleto: user.nombreCompleto,
                 email: user.correo,
                 rol: user.roles && user.roles.length > 0 ? user.roles[0].toLowerCase() : 'sin_rol',
-                //Departamento
+                //Departamento  
                 departamento: user.departamento ? user.departamento.nombre : `Depto ${user.departamentoId}`,
                 telefono: user.telefono,
                 isActive: user.estatus !== undefined ? user.estatus : true 

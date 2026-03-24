@@ -153,7 +153,7 @@ export default function GestionUsuarios() {
 
     const usuariosFiltrados = usuarios.filter(usuario => {
         const coincideBusqueda = 
-            usuario.nombre.toLowerCase().includes(busqueda.toLowerCase()) || 
+            usuario.nombreCompleto.toLowerCase().includes(busqueda.toLowerCase()) || 
             usuario.email.toLowerCase().includes(busqueda.toLowerCase()) ||
             usuario.rol.toLowerCase().includes(busqueda.toLowerCase());
             
@@ -272,10 +272,10 @@ export default function GestionUsuarios() {
                             <div className="flex items-start gap-3 w-full md:w-auto">
                                 {/* Avatar */}
                                 <div className="w-12 h-12 sm:w-14 sm:h-14 bg-[#0F2C59] rounded-full flex items-center justify-center text-white font-bold text-xl flex-shrink-0">
-                                    {usuario.nombre.charAt(0).toUpperCase()}
+                                    {usuario.nombreCompleto.charAt(0).toUpperCase()}
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <h3 className="text-lg font-bold text-[#0F2C59] truncate">{usuario.nombre}</h3>
+                                    <h3 className="text-lg font-bold text-[#0F2C59] truncate">{usuario.nombreCompleto}</h3>
                                     {/* Z*/}
                                     <div className="flex flex-wrap items-center gap-2 mt-1.5">
                                         <span className={`px-3 py-1 border text-xs font-medium rounded-full capitalize whitespace-nowrap ${obtenerColorRol(usuario.rol)}`}>
