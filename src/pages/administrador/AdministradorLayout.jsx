@@ -9,7 +9,7 @@ export default function AdministradorLayout() {
     const location = useLocation();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  // Simulemos un usuario por ahora para ver el diseño
+  // Simulacion de usuario 
     const user = { nombre: "Admin Prueba", rol: "administrador" };
 
   // Cerrar sidebar al cambiar de ruta en móvil
@@ -17,8 +17,8 @@ export default function AdministradorLayout() {
     setIsSidebarOpen(false);
     }, [location.pathname]);
 
+    // logica de cerrar sesion
     const handleLogout = () => {
-    // Aquí luego pondremos la lógica de cerrar sesión
     navigate('/login');
     };
 
@@ -126,7 +126,7 @@ export default function AdministradorLayout() {
             </div>
         </header>
 
-        {/* Área donde se inyectarán las pantallas (Outlet) */}
+        {/* (Outlet) */}
         <main className="flex-1 overflow-y-auto bg-[#F8F9FA] p-4 sm:p-6 lg:p-8 relative">
             <Outlet />
         </main>
