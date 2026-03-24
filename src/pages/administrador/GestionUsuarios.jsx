@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { Users, Search, Edit2, UserCheck, UserX, Building2, Phone, Mail, Plus,Check, X as XIcon, HelpingHand } from 'lucide-react';
 import { Card } from '../../components/Card'; 
 import { Button } from '../../components/Button'; 
+import { Input } from '../../components/Input';
 
 // Arreglo Departamentos
 const MOCK_DEPARTAMENTOS = [
@@ -46,7 +47,8 @@ export default function GestionUsuarios() {
         usuarioId: null,
         accion: '', 
         title: '',
-        message: ''
+        message: '',
+        type: 'success'
     });
     
     const [isCrearModalOpen, setIsCrearModalOpen] = useState(false);
@@ -67,7 +69,10 @@ export default function GestionUsuarios() {
             title: estaActivo ? 'Confirmar Desactivación' : 'Confirmar Activación',
             message: estaActivo 
             ? '¿Estás seguro de que quieres desactivar esta cuenta?' 
-            : '¿Estás seguro de que quieres reactivar esta cuenta?'
+            : '¿Estás seguro de que quieres reactivar esta cuenta?',
+            type: estaActivo 
+            ? 'danger' 
+            : 'success'
         });
     };
 
@@ -77,11 +82,11 @@ export default function GestionUsuarios() {
           //LLAMADA A LA API
             console.log(`Ejecutando ${confirmModal.accion} para el usuario ${confirmModal.usuarioId}`);
     
-           //éxito:
+           //exito:
             alert(`¡Usuario ${confirmModal.accion === 'activar' ? 'activado' : 'desactivado'} con éxito!`);
             setConfirmModal({ ...confirmModal, isOpen: false });
     
-           // llamar a tu API para recargar la tabla:
+           // llamar a tu API para recargar la tabla
            // fetchUsuarios();
         } catch (error) {
             console.error("Error al cambiar el estado:", error);
@@ -168,8 +173,8 @@ export default function GestionUsuarios() {
         {/* HEADER Y BOTON */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-                <h1 className="text-2xl font-bold text-[#0F2C59]">Gestión de Usuarios</h1>
-                <p className="text-gray-600 mt-1">Administrar usuarios del sistema</p>
+                <h1 className="text-2xl sm:text-3xl font-bold text-[#0F2C59]">Gestión de Usuarios</h1>
+                <p className="text-sm sm:text-base text-gray-600 mt-1">Administrar usuarios del sistema</p>
             </div>
             <div className="w-full sm:w-auto">
                 <Button onClick={() => setIsCrearModalOpen(true)} fullWidth={false} className="w-full sm:w-auto justify-center py-3 gap-2 bg-green-600 hover:bg-green-700">
@@ -182,10 +187,12 @@ export default function GestionUsuarios() {
         {/* ESTADISTICAS */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
             <Card className="p-6 flex items-center gap-4 border-none shadow-sm">
-                <div className="p-3 bg-blue-50 text-blue-600 rounded-lg"><Users size={24} /></div>
+                <div className="bg-gray-200 p-3 rounded-lg">
+                    <Users size={24} className='text-gray-600'/>
+                </div>
                 <div>
                     <p className="text-sm text-gray-500 font-medium">Total Usuarios</p>
-                    <p className="text-2xl font-bold text-[#0F2C59]">{totalUsuarios}</p>
+                    <p className="text-2xl sm:text-3xl font-bold text-[#0F2C59]">{totalUsuarios}</p>
                 </div>
             </Card>
             
@@ -193,7 +200,7 @@ export default function GestionUsuarios() {
                 <div className="p-3 bg-green-50 text-green-600 rounded-lg"><UserCheck size={24} /></div>
                 <div>
                     <p className="text-sm text-gray-500 font-medium">Usuarios Activos</p>
-                    <p className="text-2xl font-bold text-[#0F2C59]">{usuariosActivos}</p>
+                    <p className="text-2xl sm:text-3xl font-bold text-green-600">{usuariosActivos}</p>
                 </div>
             </Card>
 
@@ -201,17 +208,17 @@ export default function GestionUsuarios() {
                 <div className="p-3 bg-red-50 text-red-600 rounded-lg"><UserX size={24} /></div>
                 <div>
                     <p className="text-sm text-gray-500 font-medium">Usuarios Inactivos</p>
-                    <p className="text-2xl font-bold text-[#0F2C59]">{usuariosInactivos}</p>
+                    <p className="text-2xl sm:text-3xl font-bold text-red-600">{usuariosInactivos}</p>
                 </div>
             </Card>
         </div>
 
         {/* BUSQUEDA Y FILTROS */}
-        <Card className="p-4 flex flex-col gap-4 border-none shadow-sm bg-white">
+        <Card className="p-4 sm:p-6 mb-6 flex flex-col gap-4 border-none shadow-sm bg-white">
             {/* Buscador */}
             <div className="relative flex-1 w-full">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                <input
+                <Input
                     type="text"
                     placeholder="Buscar por nombre, correo o rol..."
                     value={busqueda}
@@ -269,7 +276,7 @@ export default function GestionUsuarios() {
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <h3 className="text-lg font-bold text-[#0F2C59] truncate">{usuario.nombre}</h3>
-                                    {/* Rol y Departamento*/}
+                                    {/* Z*/}
                                     <div className="flex flex-wrap items-center gap-2 mt-1.5">
                                         <span className={`px-3 py-1 border text-xs font-medium rounded-full capitalize whitespace-nowrap ${obtenerColorRol(usuario.rol)}`}>
                                             {usuario.rol.replace(/_/g, ' ')}
@@ -364,7 +371,7 @@ export default function GestionUsuarios() {
             onConfirm={ejecutarCambioEstado}
             title={confirmModal.title}
             message={confirmModal.message}
-            type={confirmModal.accion === 'desactivar' ? 'danger' : 'success'}
+            type={confirmModal.type}
         />
     </div>
     );

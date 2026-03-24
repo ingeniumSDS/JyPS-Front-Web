@@ -1,6 +1,5 @@
 import React from 'react';
-import { X, AlertCircle } from 'lucide-react';
-import {Button} from '../Button'; 
+import { X, AlertCircle, CheckCircle } from 'lucide-react'; 
 
 const ConfirmModal = ({ 
     isOpen, 
@@ -8,13 +7,20 @@ const ConfirmModal = ({
     onConfirm, 
     title, 
     message, 
-    type = 'danger' 
+    type = 'danger',
+    confirmText 
 }) => {
     if (!isOpen) return null;
-
+    
+    //Color dinamico
     const iconBgColor = type === 'danger' ? 'bg-red-100' : 'bg-green-100';
     const iconColor = type === 'danger' ? 'text-red-600' : 'text-green-600';
     const confirmBtnColor = type === 'danger' ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-green-600 hover:bg-green-700 text-white';
+
+    //Icono dinamico
+    const IconComponent = type === 'danger' ? AlertCircle : CheckCircle;
+    const defaultConfirmText = type === 'danger' ? 'Desactivar' : 'Activar';
+    const buttonText = confirmText || defaultConfirmText;
 
     return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
@@ -24,35 +30,39 @@ const ConfirmModal = ({
         <div className="flex justify-between items-center mb-5">
             <h3 className="text-xl font-bold text-slate-800">{title}</h3>
             <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors">
-            <X size={24} />
+                <X size={24} />
             </button>
         </div>
 
         {/* Body */}
-        <div className="flex items-center gap-4 mb-8">
-            <div className={`p-3 rounded-full flex-shrink-0 ${iconBgColor} ${iconColor}`}>
-            <AlertCircle size={28} />
+        <div className="flex flex-col gap-4 mb-8">
+            <div className="flex items-center gap-4">
+                <div className={`p-3 rounded-full flex-shrink-0 ${iconBgColor} ${iconColor}`}>
+                    <IconComponent size={28} />
+                </div>
+                <p className="text-slate-600 text-lg">{message}</p>
             </div>
-            <p className="text-slate-600 text-lg">{message}</p>
         </div>
 
         {/* Footer (Botones) */}
-        <div className="flex justify-end gap-3">
-          {/* Asumo que tu componente Button acepta className para inyectar estilos extra */}
-            <Button 
-            variant="outline" 
-            onClick={onClose}
-            className="border-slate-800 text-slate-800 hover:bg-slate-50"
-            >
-            Cancelar
-            </Button>
+        <div className="flex gap-3 w-full mt-6 pt-4">
             <button 
-            onClick={onConfirm}
-            className={`px-4 py-2 rounded-md font-medium transition-colors ${confirmBtnColor}`}
+                type="button"
+                onClick={onClose}
+                className="flex-1 px-4 py-2.5 bg-white border border-[#0F2C59] text-[#0F2C59] border-2 hover:bg-[#0F2C59] hover:text-white font-medium rounded-lg transition-colors"
             >
-            Confirmar
+                Cancelar
             </button>
-        </div>
+    
+            <button 
+                type="button"
+                onClick={onConfirm}
+                className={`flex-1 px-4 py-2.5 font-medium rounded-lg transition-colors flex justify-center items-center gap-2 ${confirmBtnColor}`}
+            >
+                {buttonText}
+            </button>
+            </div>
+
         </div>
     </div>
     );
