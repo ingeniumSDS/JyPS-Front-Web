@@ -34,6 +34,10 @@ export const router = createBrowserRouter([
       { 
         index: true,
         element: <GestionUsuarios />
+      },
+      {
+        path:"departamentos",
+        element: <GestionDepartamentos/>
       }
       
     ]
