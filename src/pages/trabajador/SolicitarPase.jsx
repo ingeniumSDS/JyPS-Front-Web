@@ -8,7 +8,7 @@ import { Button } from '../../components/Button';
 export default function SolicitarPase() {
   const navigate = useNavigate();
   
-  // Usuario simulado (hasta que conectemos el backend)
+  // Usuario simulado
   const user = { 
     nombre: "Juan Pérez García", 
     email: "juan.perez@utez.edu.mx" 
@@ -51,12 +51,12 @@ export default function SolicitarPase() {
       return;
     }
     
-    // Generar código QR simulado
+    // QR simulado
     const codigoQR = Math.random().toString(36).substring(2, 10).toUpperCase();
     
     alert('¡Solicitud enviada correctamente!');
     
-    // Por ahora regresamos al dashboard, luego crearemos la pantalla de éxito
+    //pantalla de exito (faltante)
     navigate('/trabajador');
   };
 
@@ -76,7 +76,7 @@ export default function SolicitarPase() {
       {/* Form */}
       <Card className="p-4 sm:p-6 md:p-8 border-t-4 border-t-[#0F2C59]">
         <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
-          {/* Información del Trabajador */}
+          {/* Informacion del Trabajador */}
           <div className="grid sm:grid-cols-2 gap-4">
             <Input
               label="Nombre Completo"
@@ -169,7 +169,7 @@ export default function SolicitarPase() {
 
       {/* Info */}
       <div className="mt-4 p-4 bg-blue-50 border border-blue-100 rounded-lg flex items-start gap-3">
-         <p className="text-sm text-blue-800">
+          <p className="text-sm text-blue-800">
           <strong>Nota:</strong> Tu solicitud será enviada para aprobación. Recibirás una notificación una vez que sea aprobada por tu administrador.
         </p>
       </div>
