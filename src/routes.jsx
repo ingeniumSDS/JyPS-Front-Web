@@ -38,8 +38,7 @@ export const router = createBrowserRouter([
       {
         path:"departamentos",
         element: <GestionDepartamentos/>
-      }
-      
+      },
     ]
     },
     {
