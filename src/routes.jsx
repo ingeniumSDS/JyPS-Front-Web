@@ -2,6 +2,11 @@ import { createBrowserRouter } from "react-router-dom";
 // Administrador
 import AdministradorLayout from "./pages/administrador/AdministradorLayout";
 import GestionUsuarios from "./pages/administrador/GestionUsuarios";
+// Trabajador
+import TrabajadorLayout from "./pages/trabajador/TrabajadorLayout";
+import DashboardTrabajador from "./pages/trabajador/DashboardTrabajador";
+import SolicitarPase from "./pages/trabajador/SolicitarPase";
+import SolicitarJustificante from "./pages/trabajador/SolicitarJustificante.jsx";
 import GestionDepartamentos from "./pages/administrador/GestionDepartamentos"; 
 
 // Generales
@@ -23,16 +28,34 @@ export const router = createBrowserRouter([
     },
     // Rutas protegidas (panel de administrador)
     {
-      path: "/administrador",
-      element: <AdministradorLayout />,
-      children: [
-        { 
-          index: true,
-          element: <GestionUsuarios />
+    path: "/administrador",
+    element: <AdministradorLayout />,
+    children: [
+      { 
+        index: true,
+        element: <GestionUsuarios />
+      },
+      {
+        path:"departamentos",
+        element: <GestionDepartamentos/>
+      },
+    ]
+    },
+    {
+      path: "/trabajador",
+      element : <TrabajadorLayout/>,
+      children:[
+        {
+        index: true,
+        element: <DashboardTrabajador/>
         },
         {
-          path: "departamentos", 
-          element: <GestionDepartamentos />
+          path: "pase", 
+          element: <SolicitarPase/>
+        },
+        {
+          path: "justificante",
+          element: <SolicitarJustificante/>
         }
       ]
     }
