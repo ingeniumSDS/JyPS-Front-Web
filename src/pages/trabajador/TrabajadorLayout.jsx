@@ -16,7 +16,7 @@ export default function TrabajadorLayout() {
     // Navegaciones
     const menuItems = [
         { id: 'dashboard', path: '/trabajador', icon: Home, label: 'Inicio' },
-        { id: 'reportes', path: '/trabajador/reportes', icon: FileText, label: 'Historial' },
+        { id: 'reportes', path: '/trabajador/historial', icon: FileText, label: 'Historial' },
         { id: 'perfil', path: '/trabajador/perfil', icon: User, label: 'Perfil' }
     ];
 
