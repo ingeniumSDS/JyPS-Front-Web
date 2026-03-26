@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom'; 
 import { ArrowLeft } from 'lucide-react';
 import { Card } from '../../components/Card';
 import { Input } from '../../components/Input';
@@ -7,13 +7,6 @@ import { Button } from '../../components/Button';
 
 export default function SolicitarPase() {
   const navigate = useNavigate();
-  const location = useLocation();
-
-  // LÓGICA NUEVA: Detectamos el rol según la URL actual
-  const isAdmin = location.pathname.includes('/administrador');
-  
-  // LÓGICA NUEVA: Definimos a dónde debe regresar (Administrador regresa a crear-solicitud)
-  const backPath = isAdmin ? '/administrador/crear-solicitud' : '/trabajador';
 
   // Usuario simulado
   const user = { 
@@ -63,9 +56,8 @@ export default function SolicitarPase() {
     
     alert('¡Solicitud enviada correctamente!');
     
-    // pantalla de exito (faltante)
-    // CAMBIO AQUÍ: Navegar dinámicamente después de enviar
-    navigate(backPath);
+    //regresa automaticamente a la pantalla anterior en el historial
+    navigate(-1);
   };
 
   return (
@@ -73,8 +65,7 @@ export default function SolicitarPase() {
       {/* Header */}
       <div className="flex items-center gap-3 mb-4 sm:mb-6">
         <button 
-          // CAMBIO AQUÍ: Navegar dinámicamente con la flecha de regreso
-          onClick={() => navigate(backPath)}
+          onClick={() => navigate(-1)}
           className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
         >
           <ArrowLeft size={20} className="text-[#0F2C59] sm:w-6 sm:h-6" />
@@ -162,8 +153,7 @@ export default function SolicitarPase() {
               type="button"
               variant="outline"
               fullWidth
-              // CAMBIO AQUÍ: Navegar dinámicamente al cancelar
-              onClick={() => navigate(backPath)}
+              onClick={() => navigate(-1)}
             >
               Cancelar
             </Button>

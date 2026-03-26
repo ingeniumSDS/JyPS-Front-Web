@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom'; 
 import { ArrowLeft, Paperclip, Camera, X } from 'lucide-react';
 import { Card } from '../../components/Card';
 import { Input } from '../../components/Input';
@@ -39,10 +39,7 @@ const calcularFechaMaxima = () => {
 
 export default function SolicitarJustificante() {
     const navigate = useNavigate(); 
-    const location = useLocation();
-    const isAdmin = location.pathname.includes('/administrador');
-    const backPath = isAdmin ? '/administrador/crear-solicitud' : '/trabajador';
-
+    
     // Simulacion del usuario 
     const user = { 
     nombre: "Juan Pérez García", 
@@ -105,8 +102,8 @@ export default function SolicitarJustificante() {
     
     alert('¡Justificante enviado correctamente!');
     
-    // Por ahora 
-    navigate(backPath);
+    //Regresamos a la pantalla anterior
+    navigate(-1);
     };
 
     return (
@@ -114,7 +111,7 @@ export default function SolicitarJustificante() {
       {/* Header */}
         <div className="flex items-center gap-3 mb-4 sm:mb-6">
         <button 
-            onClick={() => navigate(backPath)}
+            onClick={() => navigate(-1)}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
         >
             <ArrowLeft size={20} className="text-[#0F2C59] sm:w-6 sm:h-6"/>
@@ -263,7 +260,7 @@ export default function SolicitarJustificante() {
                 type="button"
                 variant="outline"
                 fullWidth
-                onClick={() => navigate(backPath)}
+                onClick={() => navigate(-1)}
             >
                 Cancelar
             </Button>
