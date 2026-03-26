@@ -1,5 +1,5 @@
 import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
-import { Users, LogOut, Building2, Menu, X } from 'lucide-react';
+import { Users, LogOut, Building2, Menu, X, FilePlus, History, User } from 'lucide-react';
 import { useState, useEffect } from 'react';
 //Iconos que usaremos
 import {GraduationCap} from 'lucide-react';
@@ -25,6 +25,9 @@ export default function AdministradorLayout() {
     const navItems = [
     { path: '/administrador', icon: Users, label: 'Gestión de Usuarios' },
     { path: '/administrador/departamentos', icon: Building2, label: 'Gestión de Departamentos' },
+    { path: '/administrador/crear-solicitud', icon: FilePlus, label: 'Generar Solicitud' },
+    { path: '/administrador/historial', icon: History, label: 'Historial' },
+    {path:'/administrador/perfil', icon: User, label: "Perfil"}
     ];
 
     return (

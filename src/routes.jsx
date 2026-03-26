@@ -1,4 +1,5 @@
 import { createBrowserRouter } from "react-router-dom";
+
 // Administrador
 import AdministradorLayout from "./pages/administrador/AdministradorLayout";
 import GestionUsuarios from "./pages/administrador/GestionUsuarios";
@@ -12,11 +13,11 @@ import SolicitarJustificante from "./pages/trabajador/SolicitarJustificante.jsx"
 
 // Vistas Compartidas 
 import Perfil from "./pages/globales/Perfil.jsx"; 
+import Historial from "./pages/globales/Historial.jsx";
 
 // Generales
 import Login from "./pages/Login";
 import Recuperar from "./pages/Recuperar";
-import Historial from "./pages/globales/Historial.jsx";
 
 export const router = createBrowserRouter([
     {
@@ -31,32 +32,51 @@ export const router = createBrowserRouter([
       path: "/recuperar",
       element: <Recuperar />,
     },
-    // Rutas protegidas (Panel de Administrador)
+
+    // PANEL DE ADMINISTRADOR 
     {
     path: "/administrador",
     element: <AdministradorLayout />,
     children: [
       { 
-        index: true,
+        index: true, 
         element: <GestionUsuarios />
       },
       {
-        path:"departamentos",
+        path: "departamentos",
         element: <GestionDepartamentos/>
+      },
+      {
+        path: "crear-solicitud", 
+        element: <DashboardTrabajador/>
+      },
+      // Ponemos pase y justificante al mismo nivel
+      {
+        path: "pase", 
+        element: <SolicitarPase/>
+      },
+      {
+        path: "justificante",
+        element: <SolicitarJustificante/>
       },
       {
         path: "perfil",
         element: <Perfil />
+      },
+      {
+        path: "historial",
+        element: <Historial/>
       }
     ]
     },
-    // Rutas protegidas (Panel de Trabajador)
+
+    // PANEL DE TRABAJADOR 
     {
       path: "/trabajador",
       element : <TrabajadorLayout/>,
       children:[
         {
-        index: true,
+        index: true, 
         element: <DashboardTrabajador/>
         },
         {

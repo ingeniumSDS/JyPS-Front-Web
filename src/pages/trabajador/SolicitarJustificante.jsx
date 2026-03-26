@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Paperclip, Camera, X } from 'lucide-react';
 import { Card } from '../../components/Card';
 import { Input } from '../../components/Input';
@@ -39,7 +39,11 @@ const calcularFechaMaxima = () => {
 
 export default function SolicitarJustificante() {
     const navigate = useNavigate(); 
-  // Simulacion del usuario 
+    const location = useLocation();
+    const isAdmin = location.pathname.includes('/administrador');
+    const backPath = isAdmin ? '/administrador/crear-solicitud' : '/trabajador';
+
+    // Simulacion del usuario 
     const user = { 
     nombre: "Juan Pérez García", 
     email: "juan.perez@utez.edu.mx" 
@@ -102,7 +106,7 @@ export default function SolicitarJustificante() {
     alert('¡Justificante enviado correctamente!');
     
     // Por ahora 
-    navigate('/trabajador');
+    navigate(backPath);
     };
 
     return (
@@ -110,10 +114,10 @@ export default function SolicitarJustificante() {
       {/* Header */}
         <div className="flex items-center gap-3 mb-4 sm:mb-6">
         <button 
-            onClick={() => navigate('/trabajador')}
+            onClick={() => navigate(backPath)}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
         >
-            <ArrowLeft size={20} className="text-[#0F2C59] sm:w-6 sm:h-6" />
+            <ArrowLeft size={20} className="text-[#0F2C59] sm:w-6 sm:h-6"/>
         </button>
         <h1 className="text-xl sm:text-2xl font-bold text-[#0F2C59] break-words">Solicitar Justificante</h1>
         </div>
@@ -259,7 +263,7 @@ export default function SolicitarJustificante() {
                 type="button"
                 variant="outline"
                 fullWidth
-                onClick={() => navigate('/trabajador')}
+                onClick={() => navigate(backPath)}
             >
                 Cancelar
             </Button>

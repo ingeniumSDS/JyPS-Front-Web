@@ -1,9 +1,15 @@
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Card } from '../../components/Card';
 import { FileText, LogOut as DoorOpen, Info } from 'lucide-react';
 
 export default function DashboardTrabajador() {
     const navigate = useNavigate();
+    const location = useLocation();
+
+    // LÓGICA NUEVA: Detectamos si la URL actual contiene "administrador"
+    const isAdmin = location.pathname.includes('/administrador');
+    // Definimos la base de la ruta
+    const basePath = isAdmin ? '/administrador' : '/trabajador';
 
     // Simulacion del usuario 
     const user = { 
@@ -29,7 +35,8 @@ export default function DashboardTrabajador() {
         {/* Pase de Salida */}
         <Card 
             className="p-4 sm:p-5 cursor-pointer hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-t-4 border-t-[#0F2C59]"
-            onClick={() => navigate('/trabajador/pase')}
+            /* CAMBIO AQUÍ: Usamos basePath en lugar de la ruta fija */
+            onClick={() => navigate(`${basePath}/pase`)}
         >
             <div className="flex flex-col items-center text-center">
             <div className="w-16 h-16 bg-[#0F2C59] rounded-full flex items-center justify-center mb-2 shadow-md">
@@ -47,7 +54,8 @@ export default function DashboardTrabajador() {
         {/* Justificante */}
         <Card 
             className="p-4 sm:p-5 cursor-pointer hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-t-4 border-t-[#28A745]"
-            onClick={() => navigate('/trabajador/justificante')}
+            /* CAMBIO AQUÍ: Usamos basePath en lugar de la ruta fija */
+            onClick={() => navigate(`${basePath}/justificante`)}
         >
             <div className="flex flex-col items-center text-center">
             <div className="w-16 h-16 bg-[#28A745] rounded-full flex items-center justify-center mb-2 shadow-md">
