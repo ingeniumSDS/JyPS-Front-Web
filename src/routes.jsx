@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Navigate} from "react-router-dom";
 
 // Administrador
 import AdministradorLayout from "./pages/administrador/AdministradorLayout";
@@ -10,6 +10,10 @@ import TrabajadorLayout from "./pages/trabajador/TrabajadorLayout";
 import DashboardTrabajador from "./pages/trabajador/DashboardTrabajador";
 import SolicitarPase from "./pages/trabajador/SolicitarPase";
 import SolicitarJustificante from "./pages/trabajador/SolicitarJustificante.jsx";
+//Recursos Humanos
+import RRHHLayout from "./pages/rrhh/RRHHLayout.jsx";
+import RRHHjustificantes from "./pages/rrhh/RRHHjustificantes.jsx";
+import RRHHPases from "./pages/rrhh/RRHHPases.jsx";
 
 // Vistas Compartidas 
 import Perfil from "./pages/globales/Perfil.jsx"; 
@@ -50,7 +54,6 @@ export const router = createBrowserRouter([
         path: "crear-solicitud", 
         element: <DashboardTrabajador/>
       },
-      // Ponemos pase y justificante al mismo nivel
       {
         path: "pase", 
         element: <SolicitarPase/>
@@ -96,5 +99,40 @@ export const router = createBrowserRouter([
           element: <Historial/>
         }
       ]
+    },
+    // Panel de Recursos Humanos
+    {
+        path: "/recursos-humanos",
+        element: <RRHHLayout />,
+        children:[
+          {
+            index: true,
+            element: <RRHHjustificantes /> 
+          },
+          { 
+            path: 'pases-rh',
+            element: <RRHHPases/>
+          },
+          {
+            path: "crear-solicitud", 
+            element: <DashboardTrabajador/>
+          },
+          {
+            path: "solicitar-pase", 
+            element: <SolicitarPase/>
+          },
+          {
+            path: "solicitar-justificante",
+            element: <SolicitarJustificante/>
+          },
+          {
+            path: "perfil",
+            element: <Perfil />
+          },
+          {
+            path: "historial",
+            element: <Historial/>
+          }
+        ]
     }
 ]);
