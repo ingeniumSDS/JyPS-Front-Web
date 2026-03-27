@@ -31,12 +31,13 @@ export function CrearUsuarioModal({ isOpen, onClose, onSubmit, departamentos = [
     useEffect(() => {
         if (isOpen) {
             if (usuarioAEditar) {
+                const partesNombre = usuarioAEditar.nombreCompleto ? usuarioAEditar.nombreCompleto.split(' ') : [];
                 // MODO EDITAR
                 setFormData({
                     // Control de datos
-                    nombre: usuarioAEditar.nombreOriginal || usuarioAEditar.nombre.split(' ')[0] || "",
-                    apellidoPaterno: usuarioAEditar.apellidoPaterno || usuarioAEditar.nombre.split(' ')[1] || "",
-                    apellidoMaterno: usuarioAEditar.apellidoMaterno || usuarioAEditar.nombre.split(' ')[2] || "",
+                    nombre:partesNombre[0] || "",
+                    apellidoPaterno: partesNombre[1] || "",
+                    apellidoMaterno: partesNombre.slice(2).join(' ') || "",
                     correo: usuarioAEditar.email || "",
                     telefono: usuarioAEditar.telefono || "",
                     horaEntrada: usuarioAEditar.horaEntrada ? usuarioAEditar.horaEntrada.substring(0,5) : "08:00", 

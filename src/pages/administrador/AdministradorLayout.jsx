@@ -1,5 +1,5 @@
 import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
-import { Users, LogOut, Building2, Menu, X } from 'lucide-react';
+import { Users, LogOut, Building2, Menu, X, FilePlus, History, User } from 'lucide-react';
 import { useState, useEffect } from 'react';
 //Iconos que usaremos
 import {GraduationCap} from 'lucide-react';
@@ -9,7 +9,7 @@ export default function AdministradorLayout() {
     const location = useLocation();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  // Simulemos un usuario por ahora para ver el diseño
+  // Simulacion de usuario 
     const user = { nombre: "Admin Prueba", rol: "administrador" };
 
   // Cerrar sidebar al cambiar de ruta en móvil
@@ -17,14 +17,17 @@ export default function AdministradorLayout() {
     setIsSidebarOpen(false);
     }, [location.pathname]);
 
+    // logica de cerrar sesion
     const handleLogout = () => {
-    // Aquí luego pondremos la lógica de cerrar sesión
     navigate('/login');
     };
 
     const navItems = [
     { path: '/administrador', icon: Users, label: 'Gestión de Usuarios' },
     { path: '/administrador/departamentos', icon: Building2, label: 'Gestión de Departamentos' },
+    { path: '/administrador/crear-solicitud', icon: FilePlus, label: 'Generar Solicitud' },
+    { path: '/administrador/historial', icon: History, label: 'Historial' },
+    {path:'/administrador/perfil', icon: User, label: "Perfil"}
     ];
 
     return (
@@ -126,7 +129,7 @@ export default function AdministradorLayout() {
             </div>
         </header>
 
-        {/* Área donde se inyectarán las pantallas (Outlet) */}
+        {/* (Outlet) */}
         <main className="flex-1 overflow-y-auto bg-[#F8F9FA] p-4 sm:p-6 lg:p-8 relative">
             <Outlet />
         </main>

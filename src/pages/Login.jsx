@@ -252,9 +252,7 @@ export default function Login() {
             <div className="flex items-start gap-2 sm:gap-3">
                 <Info className="text-blue-600 flex-shrink-0 mt-0.5 w-5 h-5" />
                 <div>
-                <p className="text-xs text-blue-800">
-                    Al iniciar sesión, aceptas el uso de cookies estrictamente necesarias para mantener tu sesión activa.
-                </p>
+                
                 <button
                     type="button"
                     onClick={() => setShowPrivacyModal(true)}

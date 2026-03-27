@@ -1,9 +1,11 @@
+import ConfirmModal from '../../components/modals/ConfirmModal';
 import { useUsuarios,  } from '../../hooks/useUsuarios';
 import { CrearUsuarioModal } from '../../components/modals/CrearUsuarioModal';
 import { useState, useEffect } from 'react';
-import { Users, Search, Edit2, UserCheck, UserX, Building2, Phone, Mail, Plus } from 'lucide-react';
+import { Users, Search, Edit2, UserCheck, UserX, Building2, Phone, Mail, Plus,Check, X as XIcon, HelpingHand } from 'lucide-react';
 import { Card } from '../../components/Card'; 
 import { Button } from '../../components/Button'; 
+import { Input } from '../../components/Input';
 
 // Arreglo Departamentos
 const MOCK_DEPARTAMENTOS = [
@@ -14,14 +16,83 @@ const MOCK_DEPARTAMENTOS = [
 
 
 export default function GestionUsuarios() {
+
+    //Color por rol
+    const obtenerColorRol = (rol) => {
+    const rolNormalizado = String(rol).toLowerCase();
+    
+    switch (rolNormalizado) {
+        case 'administrador':
+        case 'admin':
+            return 'bg-red-200 text-red-700 ';
+        case 'jefe_de_departamento':
+        case 'jefe':
+            return 'bg-purple-200 text-purple-700 ';
+        case 'recursos_humanos':
+        case 'rh':
+            return 'bg-green-200 text-green-100';
+        case 'empleado':
+        case 'usuario':
+            return 'bg-blue-200 text-blue-700 ';
+        case 'seguridad': 
+            return 'bg-amber200 text-amber-700';        
+        default:
+            return 'bg-slate-100 text-slate-700';
+    }
+};
+
+    // Estado para controlar el modal de confirmación
+    const [confirmModal, setConfirmModal] = useState({
+        isOpen: false,
+        usuarioId: null,
+        accion: '', 
+        title: '',
+        message: '',
+        type: 'success'
+    });
     
     const [isCrearModalOpen, setIsCrearModalOpen] = useState(false);
     const [usuarioAEditar, setUsuarioAEditar] = useState(null);
     const handleAbrirEditar = (usuario) => {
-    setUsuarioAEditar(usuario); 
-    setIsCrearModalOpen(true);  
-};
+        setUsuarioAEditar(usuario); 
+        setIsCrearModalOpen(true);  
+    };
     
+    //Modal Activar-Desactivar
+    const handleToggleEstado = (usuario) => {
+        const estaActivo = usuario.isActive; 
+
+        setConfirmModal({
+            isOpen: true,
+            usuarioId: usuario.id,
+            accion: estaActivo ? 'desactivar' : 'activar',
+            title: estaActivo ? 'Confirmar Desactivación' : 'Confirmar Activación',
+            message: estaActivo 
+            ? '¿Estás seguro de que quieres desactivar esta cuenta?' 
+            : '¿Estás seguro de que quieres reactivar esta cuenta?',
+            type: estaActivo 
+            ? 'danger' 
+            : 'success'
+        });
+    };
+
+    // Cambio de estado
+    const ejecutarCambioEstado = async () => {
+        try {
+          //LLAMADA A LA API
+            console.log(`Ejecutando ${confirmModal.accion} para el usuario ${confirmModal.usuarioId}`);
+    
+           //exito:
+            alert(`¡Usuario ${confirmModal.accion === 'activar' ? 'activado' : 'desactivado'} con éxito!`);
+            setConfirmModal({ ...confirmModal, isOpen: false });
+    
+           // llamar a tu API para recargar la tabla
+           // fetchUsuarios();
+        } catch (error) {
+            console.error("Error al cambiar el estado:", error);
+        }
+    };
+
     //Arreglo vacio
     const [usuarios, setUsuarios] = useState([]);
     const [isCargandoInicial, setIsCargandoInicial] = useState(true);
@@ -82,7 +153,7 @@ export default function GestionUsuarios() {
 
     const usuariosFiltrados = usuarios.filter(usuario => {
         const coincideBusqueda = 
-            usuario.nombre.toLowerCase().includes(busqueda.toLowerCase()) || 
+            usuario.nombreCompleto.toLowerCase().includes(busqueda.toLowerCase()) || 
             usuario.email.toLowerCase().includes(busqueda.toLowerCase()) ||
             usuario.rol.toLowerCase().includes(busqueda.toLowerCase());
             
@@ -98,12 +169,12 @@ export default function GestionUsuarios() {
     });
 
     return (
-    <div className="space-y-6">
+    <div className="space-y-6 ">
         {/* HEADER Y BOTON */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-                <h1 className="text-2xl font-bold text-[#0F2C59]">Gestión de Usuarios</h1>
-                <p className="text-gray-600 mt-1">Administrar usuarios del sistema</p>
+                <h1 className="text-2xl sm:text-3xl font-bold text-[#0F2C59]">Gestión de Usuarios</h1>
+                <p className="text-sm sm:text-base text-gray-600 mt-1">Administrar usuarios del sistema</p>
             </div>
             <div className="w-full sm:w-auto">
                 <Button onClick={() => setIsCrearModalOpen(true)} fullWidth={false} className="w-full sm:w-auto justify-center py-3 gap-2 bg-green-600 hover:bg-green-700">
@@ -116,10 +187,12 @@ export default function GestionUsuarios() {
         {/* ESTADISTICAS */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
             <Card className="p-6 flex items-center gap-4 border-none shadow-sm">
-                <div className="p-3 bg-blue-50 text-blue-600 rounded-lg"><Users size={24} /></div>
+                <div className="bg-gray-200 p-3 rounded-lg">
+                    <Users size={24} className='text-gray-600'/>
+                </div>
                 <div>
                     <p className="text-sm text-gray-500 font-medium">Total Usuarios</p>
-                    <p className="text-2xl font-bold text-[#0F2C59]">{totalUsuarios}</p>
+                    <p className="text-2xl sm:text-3xl font-bold text-[#0F2C59]">{totalUsuarios}</p>
                 </div>
             </Card>
             
@@ -127,7 +200,7 @@ export default function GestionUsuarios() {
                 <div className="p-3 bg-green-50 text-green-600 rounded-lg"><UserCheck size={24} /></div>
                 <div>
                     <p className="text-sm text-gray-500 font-medium">Usuarios Activos</p>
-                    <p className="text-2xl font-bold text-[#0F2C59]">{usuariosActivos}</p>
+                    <p className="text-2xl sm:text-3xl font-bold text-green-600">{usuariosActivos}</p>
                 </div>
             </Card>
 
@@ -135,17 +208,17 @@ export default function GestionUsuarios() {
                 <div className="p-3 bg-red-50 text-red-600 rounded-lg"><UserX size={24} /></div>
                 <div>
                     <p className="text-sm text-gray-500 font-medium">Usuarios Inactivos</p>
-                    <p className="text-2xl font-bold text-[#0F2C59]">{usuariosInactivos}</p>
+                    <p className="text-2xl sm:text-3xl font-bold text-red-600">{usuariosInactivos}</p>
                 </div>
             </Card>
         </div>
 
         {/* BUSQUEDA Y FILTROS */}
-        <Card className="p-4 flex flex-col gap-4 border-none shadow-sm bg-white">
+        <Card className="p-4 sm:p-6 mb-6 flex flex-col gap-4 border-none shadow-sm bg-white">
             {/* Buscador */}
             <div className="relative flex-1 w-full">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                <input
+                <Input
                     type="text"
                     placeholder="Buscar por nombre, correo o rol..."
                     value={busqueda}
@@ -191,7 +264,7 @@ export default function GestionUsuarios() {
         </Card>
 
         {/* LISTA DE USUARIOS */}
-        <div className="grid grid-cols-1 gap-6">
+        <div className="grid grid-cols-1 gap-6 ">
             {usuariosFiltrados.map((usuario) => (
                 <Card key={usuario.id} className="overflow-hidden hover:shadow-md transition-shadow duration-300 border-gray-200 flex flex-col rounded-xl">
                     <div className="p-4 sm:p-5 flex-1">
@@ -199,14 +272,14 @@ export default function GestionUsuarios() {
                             <div className="flex items-start gap-3 w-full md:w-auto">
                                 {/* Avatar */}
                                 <div className="w-12 h-12 sm:w-14 sm:h-14 bg-[#0F2C59] rounded-full flex items-center justify-center text-white font-bold text-xl flex-shrink-0">
-                                    {usuario.nombre.charAt(0).toUpperCase()}
+                                    {usuario.nombreCompleto.charAt(0).toUpperCase()}
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <h3 className="text-lg font-bold text-[#0F2C59] truncate">{usuario.nombre}</h3>
-                                    {/* Rol y Departamento*/}
+                                    <h3 className="text-lg font-bold text-[#0F2C59] truncate">{usuario.nombreCompleto}</h3>
+                                    {/* Z*/}
                                     <div className="flex flex-wrap items-center gap-2 mt-1.5">
-                                        <span className="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full capitalize whitespace-nowrap">
-                                            {usuario.rol.replace('_', ' ')}
+                                        <span className={`px-3 py-1 border text-xs font-medium rounded-full capitalize whitespace-nowrap ${obtenerColorRol(usuario.rol)}`}>
+                                            {usuario.rol.replace(/_/g, ' ')}
                                         </span>
                                         <div className="flex items-center gap-1.5 px-3 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded-full whitespace-nowrap">
                                             <Building2 size={14} className="text-gray-500" />
@@ -234,14 +307,21 @@ export default function GestionUsuarios() {
                                     >
                                         <Edit2 size={16} />
                                     </button>
-                                    <button className={`flex-1 md:flex-none flex justify-center items-center gap-1.5 px-3 py-2 sm:py-1.5 border rounded-lg text-sm font-medium transition-colors ${
-                                        usuario.isActive 
-                                        ? 'border-red-500 text-red-600 hover:bg-red-50' 
-                                        : 'border-green-500 text-green-600 hover:bg-green-50'
-                                    }`}>
-                                        {usuario.isActive ? <UserX size={16} /> : <UserCheck size={16} />}
-                                        {usuario.isActive ? 'Desactivar' : 'Activar'}
-                                    </button>
+                                        {usuario.isActive ?(
+                                            <button
+                                                onClick={() => handleToggleEstado(usuario)}
+                                                className='flex items-center gap-1 px-4 py-2 border border-red-600 text-red-600 rounded-md hover:bg-red-50 transition-colors font-medium'
+                                            >
+                                            <XIcon size={18}/> Desactivar
+                                        </button>
+                                        ):(
+                                            <button
+                                                onClick={() => handleToggleEstado(usuario)}
+                                                className="flex items-center gap-1 px-4 py-2 border border-green-600 text-green-600 rounded-md hover:bg-green-50 transition-colors font-medium"
+                                            >
+                                            <Check size={18}/> Activar
+                                        </button>
+                                        )}
                                 </div>
                             </div>
                         </div>
@@ -273,16 +353,26 @@ export default function GestionUsuarios() {
             </div>
         )}
 
+        {/*Modales*/}
         <CrearUsuarioModal 
-        isOpen={isCrearModalOpen}
-        onClose={() => {
+            isOpen={isCrearModalOpen}
+            onClose={() => {
             setIsCrearModalOpen(false);
             setUsuarioAEditar(null);
         }}
-        onSubmit={handleGuardarUsuario}
-        departamentos={MOCK_DEPARTAMENTOS}
-        usuarioAEditar={usuarioAEditar}
-    />
+            onSubmit={handleGuardarUsuario}
+            departamentos={MOCK_DEPARTAMENTOS}
+            usuarioAEditar={usuarioAEditar}
+        />
+
+        <ConfirmModal
+            isOpen={confirmModal.isOpen}
+            onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+            onConfirm={ejecutarCambioEstado}
+            title={confirmModal.title}
+            message={confirmModal.message}
+            type={confirmModal.type}
+        />
     </div>
     );
 }
