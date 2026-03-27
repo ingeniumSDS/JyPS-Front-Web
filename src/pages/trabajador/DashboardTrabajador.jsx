@@ -17,7 +17,7 @@ export default function DashboardTrabajador() {
     if (isAdmin) {
         basePath = '/administrador';
     } else if (isRRHH) {
-        basePath = '/recursos-humanos'; 
+        basePath = '/recursos-humanos';
     }
 
 

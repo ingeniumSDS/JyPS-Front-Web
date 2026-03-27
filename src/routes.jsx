@@ -55,11 +55,11 @@ export const router = createBrowserRouter([
         element: <DashboardTrabajador/>
       },
       {
-        path: "pase", 
+        path: "solicitar-pase", 
         element: <SolicitarPase/>
       },
       {
-        path: "justificante",
+        path: "solicitar-justificante",
         element: <SolicitarJustificante/>
       },
       {
@@ -83,11 +83,11 @@ export const router = createBrowserRouter([
         element: <DashboardTrabajador/>
         },
         {
-          path: "pase", 
+          path: "solicitar-pase", 
           element: <SolicitarPase/>
         },
         {
-          path: "justificante",
+          path: "solicitar-justificante",
           element: <SolicitarJustificante/>
         },
         {
