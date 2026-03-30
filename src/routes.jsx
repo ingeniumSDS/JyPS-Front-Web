@@ -1,4 +1,7 @@
 import { createBrowserRouter, Navigate} from "react-router-dom";
+// Jefe de departamento
+import JefeLayout from "./pages/jefe-area/JefeLayout.jsx";
+import DashboardJefe from "./pages/jefe-area/DashboardJefe.jsx";
 
 // Administrador
 import AdministradorLayout from "./pages/administrador/AdministradorLayout";
@@ -83,6 +86,10 @@ export const router = createBrowserRouter([
         element: <DashboardTrabajador/>
         },
         {
+          path: "trabajadores", // <--- TE FALTA AGREGAR ESTA RUTA
+          element: <div>Vista de Trabajadores en construcción</div> // Cambiar por tu componente cuando lo crees
+        },
+        {
           path: "solicitar-pase", 
           element: <SolicitarPase/>
         },
@@ -112,6 +119,37 @@ export const router = createBrowserRouter([
           { 
             path: 'pases-rh',
             element: <RRHHPases/>
+          },
+          {
+            path: "crear-solicitud", 
+            element: <DashboardTrabajador/>
+          },
+          {
+            path: "solicitar-pase", 
+            element: <SolicitarPase/>
+          },
+          {
+            path: "solicitar-justificante",
+            element: <SolicitarJustificante/>
+          },
+          {
+            path: "perfil",
+            element: <Perfil />
+          },
+          {
+            path: "historial",
+            element: <Historial/>
+          }
+        ]
+    },
+    // Panel de jefe de area
+    {
+        path: "/jefe-area",
+        element: <JefeLayout/>,
+        children:[
+          {
+            index: true,
+            element: <DashboardJefe/>
           },
           {
             path: "crear-solicitud", 
