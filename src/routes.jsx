@@ -1,4 +1,7 @@
 import { createBrowserRouter, Navigate} from "react-router-dom";
+// Guardia
+import GuardiaLayout from "./pages/guardia/GuardiaLayout.jsx";
+import ValidadorCodigo from "./pages/guardia/ValidadorCodigo.jsx";
 // Jefe de departamento
 import JefeLayout from "./pages/jefe-area/JefeLayout.jsx";
 import DashboardJefe from "./pages/jefe-area/DashboardJefe.jsx";
@@ -177,5 +180,16 @@ export const router = createBrowserRouter([
             element: <Historial/>
           }
         ]
+    },
+    // Panel guardia 
+    {
+      path: "/guardia",
+      element: <GuardiaLayout/>,
+      children : [
+          {
+            index :true,
+            element : <ValidadorCodigo/>
+          }
+      ]
     }
 ]);
