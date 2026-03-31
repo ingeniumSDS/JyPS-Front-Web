@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate} from "react-router-dom";
 // Jefe de departamento
 import JefeLayout from "./pages/jefe-area/JefeLayout.jsx";
 import DashboardJefe from "./pages/jefe-area/DashboardJefe.jsx";
+import JefeCrearTabajador from "./pages/jefe-area/JefeCrearTabajador.jsx";
 
 // Administrador
 import AdministradorLayout from "./pages/administrador/AdministradorLayout";
@@ -150,6 +151,10 @@ export const router = createBrowserRouter([
           {
             index: true,
             element: <DashboardJefe/>
+          },
+          { 
+            path: "trabajadores",
+            element: <JefeCrearTabajador/>
           },
           {
             path: "crear-solicitud", 
