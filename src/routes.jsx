@@ -1,4 +1,11 @@
 import { createBrowserRouter, Navigate} from "react-router-dom";
+// Guardia
+import GuardiaLayout from "./pages/guardia/GuardiaLayout.jsx";
+import ValidadorCodigo from "./pages/guardia/ValidadorCodigo.jsx";
+// Jefe de departamento
+import JefeLayout from "./pages/jefe-area/JefeLayout.jsx";
+import DashboardJefe from "./pages/jefe-area/DashboardJefe.jsx";
+import JefeCrearTabajador from "./pages/jefe-area/JefeCrearTabajador.jsx";
 
 // Administrador
 import AdministradorLayout from "./pages/administrador/AdministradorLayout";
@@ -83,6 +90,10 @@ export const router = createBrowserRouter([
         element: <DashboardTrabajador/>
         },
         {
+          path: "trabajadores", // <--- TE FALTA AGREGAR ESTA RUTA
+          element: <div>Vista de Trabajadores en construcción</div> // Cambiar por tu componente cuando lo crees
+        },
+        {
           path: "solicitar-pase", 
           element: <SolicitarPase/>
         },
@@ -134,5 +145,51 @@ export const router = createBrowserRouter([
             element: <Historial/>
           }
         ]
+    },
+    // Panel de jefe de area
+    {
+        path: "/jefe-area",
+        element: <JefeLayout/>,
+        children:[
+          {
+            index: true,
+            element: <DashboardJefe/>
+          },
+          { 
+            path: "trabajadores",
+            element: <JefeCrearTabajador/>
+          },
+          {
+            path: "crear-solicitud", 
+            element: <DashboardTrabajador/>
+          },
+          {
+            path: "solicitar-pase", 
+            element: <SolicitarPase/>
+          },
+          {
+            path: "solicitar-justificante",
+            element: <SolicitarJustificante/>
+          },
+          {
+            path: "perfil",
+            element: <Perfil />
+          },
+          {
+            path: "historial",
+            element: <Historial/>
+          }
+        ]
+    },
+    // Panel guardia 
+    {
+      path: "/guardia",
+      element: <GuardiaLayout/>,
+      children : [
+          {
+            index :true,
+            element : <ValidadorCodigo/>
+          }
+      ]
     }
 ]);

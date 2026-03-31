@@ -10,6 +10,7 @@ export default function DashboardTrabajador() {
     // Detectamos el rol
     const isAdmin = location.pathname.includes('/administrador');
     const isRRHH = location.pathname.includes('/recursos-humanos');
+    const isJefe = location.pathname.includes('/jefe-area')
     
     // Definimos la RUTA BASE 
     let basePath = '/trabajador'; 
@@ -18,6 +19,8 @@ export default function DashboardTrabajador() {
         basePath = '/administrador';
     } else if (isRRHH) {
         basePath = '/recursos-humanos';
+    }else if (isJefe){
+        basePath = '/jefe-area'
     }
 
 
