@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 
 // Fallback de seguridad
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://yolonda-otocystic-personably.ngrok-free.dev/api/v1';
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://ced-service.porgy-diatonic.ts.net:10000/api/v1';
 
 export const useApi = () => {
     const [isLoading, setIsLoading] = useState(false);
