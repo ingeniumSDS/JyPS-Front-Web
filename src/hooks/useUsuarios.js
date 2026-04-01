@@ -4,7 +4,27 @@ export const useUsuarios = () => {
 
     const { request, isLoading } = useApi();
 
-    //POST
+    // FUNCION DE LOGIN 
+    const loginUsuario = async (correo, contrasena) => {
+        try {
+            const payload = { 
+                correo: correo, 
+                password: contrasena 
+            };
+            
+            console.log("Enviando este JSON al backend:", payload); // Para que lo veas en consola
+
+            const respuesta = await request('/usuarios/login', 'POST', payload);
+            
+            return { exito: true, data: respuesta };
+            
+        } catch (err) {
+            console.error("Error en el login:", err);
+            return { exito: false, mensaje: err.message }; 
+        }
+    };
+
+    //POST - crear ususrio (Admin)
     const crearUsuario = async (formData) => {
         try {
             //JSON
@@ -28,7 +48,7 @@ export const useUsuarios = () => {
         }
     };
 
-    //GET
+    //GET - obtener todos los ususarios (Admin)
     const obtenerUsuarios = async () => {
         try {
             const respuesta = await request('/usuarios', 'GET');
@@ -58,6 +78,7 @@ export const useUsuarios = () => {
     };
 
     return { 
+        loginUsuario,
         crearUsuario,
         obtenerUsuarios, 
         isLoading 
