@@ -29,6 +29,7 @@ import Historial from "./pages/globales/Historial.jsx";
 // Generales
 import Login from "./pages/Login";
 import Recuperar from "./pages/Recuperar";
+import NuevaPassword from './pages/NuevaPassword';
 
 export const router = createBrowserRouter([
     {
@@ -43,7 +44,10 @@ export const router = createBrowserRouter([
       path: "/recuperar",
       element: <Recuperar />,
     },
-
+    {
+      path: "/establecer-contrasena/:token",
+      element: <NuevaPassword/>
+    },
     // PANEL DE ADMINISTRADOR 
     {
     path: "/administrador",
