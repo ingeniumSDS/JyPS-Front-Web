@@ -23,7 +23,44 @@ export const useUsuarios = () => {
             return { exito: false, mensaje: err.message }; 
         }
     };
+   // SOLICITAR RECUPERACIÓN (Envía el correo)
+    const solicitarRecuperacion = async (correo) => {
+        try {
+            // ¡Corregido! Ahora apuntamos a /usuarios/token según tu Swagger
+            const data = await request('/usuarios/token', 'POST', { correo });
+            return { exito: true, data, mensaje: data.mensaje || "Solicitud procesada" };
+        } catch (error) {
+            console.error("Error en solicitarRecuperacion:", error);
+            return { exito: false, mensaje: error.message || "Error de conexión con el servidor" };
+        }
+    }
+    // VERIFICAR TOKEN (Control de acceso)
+    const verificarToken = async (token) => {
+        try {
+            const data = await request(`/usuarios/setup/validar?token=${token}`, 'GET');
+            return { exito: true, data, mensaje: data.mensaje || "Token verificado" };
+        } catch (error) {
+            console.error("Error en verificarToken:", error);
+            return { exito: false, mensaje: error.message || "Error al verificar el enlace" };
+        }
+    };
+    // RESTABLECER CONTRASEÑA (Guardar la nueva)
+    const restablecerContrasena = async (token, nuevaContrasena) => {
+        try {
+            const payload = { 
+                token: token, 
+                password: nuevaContrasena 
+            };
+            const data = await request('/usuarios/setup', 'POST', payload);
+            return { exito: true, data, mensaje: data.mensaje || "Contraseña actualizada exitosamente" };
+        } catch (error) {
+            console.error("Error en restablecerContrasena:", error);
+            return { exito: false, mensaje: error.message || "Error al guardar la nueva contraseña" };
+        }
+    };
 
+
+    //-----------------------------------------------------------------------
     //POST - crear ususrio (Admin)
     const crearUsuario = async (formData) => {
         try {
@@ -78,6 +115,9 @@ export const useUsuarios = () => {
     };
 
     return { 
+        solicitarRecuperacion,
+        verificarToken,
+        restablecerContrasena,
         loginUsuario,
         crearUsuario,
         obtenerUsuarios, 
