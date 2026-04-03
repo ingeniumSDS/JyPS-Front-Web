@@ -61,7 +61,7 @@ export default function GestionUsuarios() {
     });
 
     // --- HOOKS Y EFECTOS ---
-    const { crearUsuario, obtenerUsuarios, obtenerDepartamento, actualizarUsuario } = useGestion();
+    const { crearUsuario, obtenerUsuarios, obtenerDepartamento, actualizarUsuario, cambiarEstadoUsuario } = useGestion();
 
     const cargarDatosIniciales = async () => {
         setIsCargandoInicial(true);
@@ -135,14 +135,25 @@ export default function GestionUsuarios() {
 
     const ejecutarCambioEstado = async () => {
         try {
-            console.log(`Ejecutando ${confirmModal.accion} para el usuario ${confirmModal.usuarioId}`);
-            toast.info(`¡Usuario ${confirmModal.accion === 'activar' ? 'activado' : 'desactivado'} simulado!`);
+            // 1. Determinamos qué booleano mandar basado en la acción
+            const nuevoEstado = confirmModal.accion === 'activar' ? true : false;
             
-            setConfirmModal({ ...confirmModal, isOpen: false });
-            // cargarDatosIniciales(); // Descomentar al integrar endpoint
+            // 2. Llamamos a nuestra nueva función del Hook
+            const response = await cambiarEstadoUsuario(confirmModal.usuarioId, nuevoEstado);
+
+            if (response.exito) {
+                // 3. Notificamos éxito y cerramos el modal
+                toast.success(`¡Usuario ${confirmModal.accion === 'activar' ? 'activado' : 'desactivado'} con éxito!`);
+                setConfirmModal(prev => ({ ...prev, isOpen: false }));
+                
+                // 4. Recargamos la tabla para ver el cambio reflejado
+                cargarDatosIniciales(); 
+            } else {
+                toast.error("Error al cambiar el estado: " + response.mensaje);
+            }
         } catch (error) {
             console.error("Error al cambiar el estado:", error);
-            toast.error("Error al cambiar el estado");
+            toast.error("Ocurrió un error inesperado al cambiar el estado");
         }
     };
 

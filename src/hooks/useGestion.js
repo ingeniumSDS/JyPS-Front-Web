@@ -68,7 +68,7 @@ export const useGestion = () => {
                 rol: user.roles && user.roles.length > 0 ? user.roles[0].toLowerCase() : 'sin_rol',
                 departamento: user.departamento ? user.departamento.nombre : `Depto ${user.departamentoId}`,
                 telefono: user.telefono,
-                isActive: user.estatus !== undefined ? user.estatus : true 
+                isActive: user.activo !== undefined ? user.activo : true
             }));
 
             return { exito: true, data: usuariosFormateados };
@@ -79,7 +79,17 @@ export const useGestion = () => {
         }
     };
 
-    // Obtiene y formatea la lista de departamentos disponibles
+    // Cambia el estado (activo/inactivo) de un usuario mediante PATCH
+    const cambiarEstadoUsuario = async (id, estatus) => {
+        try {
+            const respuesta = await request(`/usuarios/${id}/estado?estatus=${estatus}`, 'PATCH');
+            return { exito: true, data: respuesta };
+            
+        } catch (err) {
+            console.error("Error al cambiar estado del usuario:", err);
+            return { exito: false, mensaje: err.message };
+        }
+    };
     const obtenerDepartamento = async () => {
         try {
             const respuesta = await request('/departamentos', 'GET');
@@ -101,6 +111,7 @@ export const useGestion = () => {
     };
 
     return {
+        cambiarEstadoUsuario,
         isLoading,
         crearUsuario,
         actualizarUsuario,
