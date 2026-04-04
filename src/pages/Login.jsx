@@ -1,24 +1,20 @@
-import { ModalInfoSeguridad } from '../components/modals/ModalInfoSeguridad';
-import { ModalAvisoPrivacidad } from '../components/modals/ModalAvisoPrivacidad';
-import { useUsuarios } from '../hooks/useUsuarios';
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from 'react-router';
+import { useAuth } from '../context/AuthContext';
+import { useUsuarios } from '../hooks/useUsuarios';
+import { ModalInfoSeguridad } from '../components/modals/ModalInfoSeguridad';
+import { ModalAvisoPrivacidad } from '../components/modals/ModalAvisoPrivacidad';
 import { Input } from "../components/Input";
 import { PasswordInput } from "../components/PasswordInput";
 import { Button } from "../components/Button";
 import { Card } from "../components/Card";
-import { 
-    GraduationCap, Shield, Info, AlertTriangle, 
-    KeyRound, Mail, AlertCircle, FileText, 
-    ArrowRight, ShieldCheck, UserX, Clock, 
-    Link as LinkIcon 
-} from "lucide-react";
+import { GraduationCap, Shield, Info, AlertTriangle, Clock } from "lucide-react";
 
-// CONSTANTES GLOBALES
+// --- CONSTANTES ---
 const MAX_INTENTOS = 3;
 const TIEMPO_BLOQUEO_MS = 1 * 60 * 1000;
 
-// FUNCIONES AUXILIARES
+// --- UTILS ---
 const decodificarJwt = (token) => {
     try {
         return JSON.parse(atob(token.split('.')[1]));
@@ -26,11 +22,10 @@ const decodificarJwt = (token) => {
         return null;
     }
 };
+
 const obtenerRutaPorRol = (datosDelToken) => {
     const rolCrudo = datosDelToken?.rol || datosDelToken?.roles || '';
     const rolUsuario = typeof rolCrudo === 'string' ? rolCrudo.toUpperCase() : (rolCrudo[0] || '').toUpperCase(); 
-
-    console.log("Rol final evaluado:", rolUsuario);
 
     switch(rolUsuario) {
         case 'ADMINISTRADOR': return '/administrador';
@@ -38,32 +33,30 @@ const obtenerRutaPorRol = (datosDelToken) => {
         case 'JEFE':          return '/jefe-area';
         case 'RH':            return '/recursos-humanos';
         case 'TRABAJADOR':    return '/trabajador';
-        default:
-            console.warn("Rol no reconocido o vacío:", rolCrudo);
-            return '/trabajador'; 
+        default:              return '/trabajador'; 
     }
 };
 
-// COMPONENTE PRINCIPAL LOGIN
 export default function Login() {
     const navigate = useNavigate();
+    const { iniciarSesion } = useAuth();
+    const { loginUsuario, isLoading: isApiLoading } = useUsuarios();
     
-    // Estados de Seguridad 
+    // ESTADOS: SEGURIDAD 
     const [intentosFallidos, setIntentosFallidos] = useState(0);
     const [estaBloqueado, setEstaBloqueado] = useState(false);
     const [tiempoRestante, setTiempoRestante] = useState(0);  
 
-    // Estados del Formulario 
+    // ESTADOS: FORMULARIO 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
-    const { loginUsuario, isLoading: isApiLoading } = useUsuarios();
 
-    // Estados de Modales 
+    // ESTADOS: MODALES 
     const [showSecurityModal, setShowSecurityModal] = useState(false);
     const [showPrivacyModal, setShowPrivacyModal] = useState(false);  
 
-    // Efecto: Cargar estado de bloqueo al iniciar 
+    // EFECTOS 
     useEffect(() => {
         const datosBloqueo = localStorage.getItem('jyps_bloqueo');
         if (datosBloqueo) {
@@ -80,7 +73,6 @@ export default function Login() {
         }
     }, []);
 
-    //  Efecto: Contador de tiempo restante 
     useEffect(() => {
         let intervalo;
         if (estaBloqueado && tiempoRestante > 0) {
@@ -100,39 +92,31 @@ export default function Login() {
         return () => clearInterval(intervalo);
     }, [estaBloqueado, tiempoRestante]);
 
-    //Manejador del Login 
+    // HANDLERS 
     const handleSubmit = async (e) => { 
         e.preventDefault();
         
         if (estaBloqueado) return;
-        // Llamada a la API
+        
         const response = await loginUsuario(email, password);
+        
         if (response.exito) {
-            // EXITO 
-            // Limpiamos error y bloqueo
             setIntentosFallidos(0);
             localStorage.removeItem('jyps_bloqueo');
             setError('');
 
-            // Procesamos el token
             const token = response.data.tokenJwt; 
             const datosDelToken = decodificarJwt(token);
             
-            // Guardamos sesion
-            localStorage.setItem('jyps_token', token); 
-            localStorage.setItem('jyps_user', JSON.stringify(datosDelToken));
+            await iniciarSesion(token);
 
-            // Redireccion por roles
             const rutaDestino = obtenerRutaPorRol(datosDelToken);
             navigate(rutaDestino);
-            
         } else {
-            // FALLO
             const nuevosIntentos = intentosFallidos + 1;
             setIntentosFallidos(nuevosIntentos);
 
             if (nuevosIntentos >= MAX_INTENTOS) {
-                // Bloquear cuenta
                 const tiempoDesbloqueo = Date.now() + TIEMPO_BLOQUEO_MS;
                 setEstaBloqueado(true);
                 setTiempoRestante(Math.ceil(TIEMPO_BLOQUEO_MS / 1000));
@@ -143,18 +127,18 @@ export default function Login() {
                 }));
                 setError(''); 
             } else {
-                // Mostrar error con intentos restantes
                 const intentosRestantes = MAX_INTENTOS - nuevosIntentos;
                 setError(`${response.mensaje}. Te quedan ${intentosRestantes} intento(s).`);
             }
         }
     };
 
+    // RENDER 
     return (
         <div className="min-h-screen bg-[#F8F9FA] flex items-center justify-center p-4 sm:p-6">
             <div className="w-full max-w-md">
                 
-                {/* Encabezado y Logo  */}
+                {/* HEADER */}
                 <div className="text-center mb-6 sm:mb-8">
                     <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 bg-[#0F2C59] rounded-full mb-3 sm:mb-4 shadow-lg">
                         <GraduationCap size={28} className="text-white sm:w-8 sm:h-8" />
@@ -167,11 +151,9 @@ export default function Login() {
                     </p>
                 </div>
 
-                {/* Tarjeta Principal  */}
                 <Card className="p-6 sm:p-8 border-gray-100">
                     {estaBloqueado ? (
-                        
-                        /* --- Pantalla de Bloqueo --- */
+                        /* ESTADO: BLOQUEADO */
                         <div className="text-center py-2">
                             <div className="inline-flex items-center justify-center w-20 h-20 bg-red-100 rounded-full mb-6">
                                 <AlertTriangle size={40} className="text-[#DC3545]" />
@@ -228,8 +210,7 @@ export default function Login() {
                             </p>
                         </div>
                     ) : (
-
-                        /* --- Formulario de Login --- */
+                        /* ESTADO: FORMULARIO NORMAL */
                         <>
                             <form onSubmit={handleSubmit} className="space-y-6">
                                 <Input
@@ -247,7 +228,6 @@ export default function Login() {
                                     onChange={(e) => setPassword(e.target.value)}
                                 />
 
-                                {/* Mensaje de Error */}
                                 {error && (
                                     <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
                                         <AlertTriangle size={16} className="text-red-600 flex-shrink-0" />
@@ -276,7 +256,7 @@ export default function Login() {
                     )}
                 </Card>
 
-                {/* --- Avisos Legales y Seguridad --- */}
+                {/* AVISOS LEGALES */}
                 <div className="mt-4 space-y-3">
                     <Card className="p-3 sm:p-4 bg-amber-50 border border-amber-200">
                         <div className="flex items-start gap-2 sm:gap-3">
@@ -312,7 +292,7 @@ export default function Login() {
                     </Card>
                 </div>
 
-                {/* --- Pie de página --- */}
+                {/* FOOTER */}
                 <div className="mt-6 text-center">
                     <p className="text-xs text-gray-400">
                         © 2026 UTEZ. Sistema JyPS v1.0.0
@@ -320,7 +300,7 @@ export default function Login() {
                 </div>
             </div>
             
-            {/* ================= MODALES ================= */}
+            {/* RENDER MODALES */}
             <ModalInfoSeguridad 
                 isOpen={showSecurityModal} 
                 onClose={() => setShowSecurityModal(false)} 
