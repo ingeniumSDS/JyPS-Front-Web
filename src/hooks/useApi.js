@@ -17,6 +17,12 @@ export const useApi = () => {
                 'ngrok-skip-browser-warning': 'true'
             };
 
+            // guardamos token
+            const token = localStorage.getItem('token');
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+
             const config = { method, headers };
 
             if (body) {
