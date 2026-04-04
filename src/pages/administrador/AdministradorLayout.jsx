@@ -1,7 +1,7 @@
+import { useAuth } from '../../context/AuthContext';
 import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
 import { Users, LogOut, Building2, Menu, X, FilePlus, History, User } from 'lucide-react';
 import { useState, useEffect } from 'react';
-//Iconos que usaremos
 import {GraduationCap} from 'lucide-react';
 
 export default function AdministradorLayout() {
@@ -10,16 +10,17 @@ export default function AdministradorLayout() {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Simulacion de usuario 
-    const user = { nombre: "Admin Prueba", rol: "administrador" };
+    const { user, cerrarSesion } = useAuth();
 
-  // Cerrar sidebar al cambiar de ruta en móvil
+  // Cerrar sidebar al cambiar de ruta en movil
     useEffect(() => {
     setIsSidebarOpen(false);
     }, [location.pathname]);
 
     // logica de cerrar sesion
     const handleLogout = () => {
-    navigate('/login');
+        cerrarSesion();      
+        navigate('/login');
     };
 
     const navItems = [
