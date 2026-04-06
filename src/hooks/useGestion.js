@@ -1,3 +1,4 @@
+import { data } from "react-router";
 import { useApi } from "./useApi";
 
 export const useGestion = () => {
@@ -5,7 +6,7 @@ export const useGestion = () => {
 
     // --- MÉTODOS DE ESCRITURA (POST / PUT) ---
 
-    // Crea un nuevo usuario
+    // CREAR USUARIO / POST
     const crearUsuario = async (formData) => {
         try {
             const payload = {
@@ -29,7 +30,7 @@ export const useGestion = () => {
         }
     };
 
-    // Actualiza los datos de un usuario existente
+    // ACTUALIZAR USUARIO / PUT 
     const actualizarUsuario = async (id, formData) => {
         try {
             const payload = {
@@ -53,9 +54,31 @@ export const useGestion = () => {
         }
     };
 
-    // --- MÉTODOS DE LECTURA (GET) ---
+    // CREAR DEPTOS / POST
+    const crearDepartamento = async (formData) => {
+        try {
+            const payload = {
+                nombre: formData.nombre.trim(),
+                descripcion: formData.descripcion.trim(),
+                jefeId: formData.jefeId || 0 
+            };
+            
+            const respuesta = await request('/departamentos', 'POST', payload);
+            return { exito: true, data: respuesta };
+            
+        } catch (err) {
+            console.error("Error al crear departamento", err);
+            return { exito: false, mensaje: err.message }; 
+        }
+    };
 
-    // Obtiene y formatea la lista de todos los usuarios
+    // TAREA: ACTUALIZAR DEPTPS/ PUT
+
+    // TAREA: ASIGNAR JF A DEPTOS / POST
+
+    // --- METODOS DE LECTURA (GET) ---
+
+    // OBTENER USUARIOS / GET
     const obtenerUsuarios = async () => {
         try {
             const respuesta = await request('/usuarios', 'GET');
@@ -79,7 +102,7 @@ export const useGestion = () => {
         }
     };
 
-    // Cambia el estado (activo/inactivo) de un usuario mediante PATCH
+    // CAMBIO DE ESTADO USUARIO/  PATCH
     const cambiarEstadoUsuario = async (id, estatus) => {
         try {
             const respuesta = await request(`/usuarios/${id}/estado?estatus=${estatus}`, 'PATCH');
@@ -90,16 +113,22 @@ export const useGestion = () => {
             return { exito: false, mensaje: err.message };
         }
     };
+    
+    // OBTENER DEPTOS / GET
     const obtenerDepartamento = async () => {
         try {
             const respuesta = await request('/departamentos', 'GET');
             const departamentosBackend = Array.isArray(respuesta) ? respuesta : (respuesta.data || []);
             
             const departamentosFormateados = departamentosBackend.map(dep => ({
-                id: dep.id || Math.random().toString(),
+                id: dep.id,
                 nombre: dep.nombre,
                 descripcion: dep.descripcion,
-                jefeId: dep.jefeId
+                jefeId: dep.jefeId,
+                nombreJefe: dep.nombreJefe || 'Sin jefe asignado', 
+                activo: dep.activo, 
+                estado: dep.activo ? 'Activo' : 'Inactivo', 
+                totalEmpleados: dep.totalEmpleados || 0 
             }));
 
             return { exito: true, data: departamentosFormateados };
@@ -110,7 +139,10 @@ export const useGestion = () => {
         }
     };
 
+    // TAREA: CAMBIO DE ESTADO DEPTOS/ PATCH
+
     return {
+        crearDepartamento,
         cambiarEstadoUsuario,
         isLoading,
         crearUsuario,
