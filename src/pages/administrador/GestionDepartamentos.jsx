@@ -1,70 +1,153 @@
-import { useState } from 'react';
-import { Building2, Plus, Search, Edit2, Check, CheckCircle, XCircle, Users, UserCheck, XIcon } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Building2, Plus, Search, Edit2, Check, CheckCircle, XCircle, Users, UserCheck, XIcon, Loader2 } from 'lucide-react';
 import { Card } from '../../components/Card'; 
 import { Button } from '../../components/Button'; 
 import { Input } from '../../components/Input';
-import { Modal } from '../../components/Modal';
 import ConfirmModal from '../../components/modals/ConfirmModal';
+import DepartamentoFormModal from '../../components/modals/DepartamentoFormModal'; // Ajusta la ruta según tu estructura
 
-// Datos de prueba (Mock)
-const MOCK_DEPARTAMENTOS = [
-    { id: '1', nombre: 'Recursos Humanos', descripcion: 'Gestión del personal, nóminas y contratación general de la empresa.', jefe: 'Ana Torres Méndez', trabajadores: 12, estado: 'Activo' },
-    { id: '2', nombre: 'Sistemas', descripcion: 'Soporte técnico, mantenimiento de redes y desarrollo de software interno.', jefe: 'Roberto Sánchez', trabajadores: 8, estado: 'Activo' },
-    { id: '3', nombre: 'Finanzas', descripcion: 'Administración de presupuestos, contabilidad y pagos.', jefe: 'Sin asignar', trabajadores: 5, estado: 'Activo' },
-    { id: '4', nombre: 'Archivo Histórico', descripcion: 'Resguardo de documentos de administraciones pasadas.', jefe: 'Carlos Ruiz', trabajadores: 2, estado: 'Inactivo' }
-];
+import { useGestion } from '../../hooks/useGestion'; 
 
 export default function GestionDepartamentos() {
-    // Estados
-    const [departamentos, setDepartamentos] = useState(MOCK_DEPARTAMENTOS);
+
+    const [jefesDisponibles, setJefesDisponibles] = useState([]);
+    const [departamentos, setDepartamentos] = useState([]);
+    const [isLoading, setIsLoading] = useState(true); 
     const [busqueda, setBusqueda] = useState('');
     const [filtroEstado, setFiltroEstado] = useState('Todos');
+    const [isSaving, setIsSaving] = useState(false);
 
-    // Estados para modales
+    const { obtenerDepartamento, crearDepartamento, obtenerUsuarios } = useGestion();
+
     const [isFormModalOpen, setIsFormModalOpen] = useState(false);
     const [departamentoAEditar, setDepartamentoAEditar] = useState(null);
-    const [formData, setFormData] = useState({ nombre: '', descripcion: '' });
+    const [formData, setFormData] = useState({ nombre: '', descripcion: '', jefeId: '' });
     
     const [confirmModal, setConfirmModal] = useState({
         isOpen: false,
         title: '',
         message: '',
         departamentoId: null,
-        nuevoEstado: ''
+        nuevoEstado: '',
+        type: 'success'
     });
 
-    // Lógica de filtrado 
+    // Cargar Jefes
+    useEffect(() => {
+        const fetchJefes = async () => {
+            try {
+                const respuesta = await obtenerUsuarios(); 
+                const usuariosArray = respuesta.data ? respuesta.data : respuesta;
+
+                if (Array.isArray(usuariosArray)) {
+                    const soloJefes = usuariosArray.filter(usuario => usuario.rol === 'jefe_de_departamento');
+                    setJefesDisponibles(soloJefes);
+                } else {
+                    console.error("Formato de usuarios no válido");
+                }
+            } catch (error) {
+                console.error("Error al obtener usuarios:", error);
+            }
+        };
+
+        fetchJefes();
+    }, []);
+
+    // Cargar Departamentos
+    useEffect(() => {
+        const cargarDepartamentos = async () => {
+            setIsLoading(true);
+            const resultado = await obtenerDepartamento();
+            
+            if (resultado.exito) {
+                const deptosAdaptados = resultado.data.map(dep => ({
+                    id: dep.id,
+                    nombre: dep.nombre,
+                    descripcion: dep.descripcion,
+                    jefeNombre: dep.nombreJefe || 'Sin jefe asignado', 
+                    trabajadores: dep.totalEmpleados || 0, 
+                    estado: dep.estado || (dep.activo ? 'Activo' : 'Inactivo') 
+                }));
+                setDepartamentos(deptosAdaptados);
+            } else {
+                console.error("Error al cargar departamentos:", resultado.mensaje);
+            }
+            setIsLoading(false);
+        };
+
+        cargarDepartamentos();
+    }, []); 
+
+    // Filtrado y Estadísticas
     const departamentosFiltrados = departamentos.filter(dept => {
         const coincideBusqueda = dept.nombre.toLowerCase().includes(busqueda.toLowerCase()) || 
-                                    dept.descripcion.toLowerCase().includes(busqueda.toLowerCase());
+                                dept.descripcion.toLowerCase().includes(busqueda.toLowerCase());
         const coincideEstado = filtroEstado === 'Todos' ? true : dept.estado === filtroEstado;
         return coincideBusqueda && coincideEstado;
     });
 
-    // Estadísticas 
     const stats = {
         total: departamentos.length,
         activos: departamentos.filter(d => d.estado === 'Activo').length,
         inactivos: departamentos.filter(d => d.estado === 'Inactivo').length
     };
 
-    // Handlers 
+    // Handlers
     const handleAbrirCrear = () => {
         setDepartamentoAEditar(null);
-        setFormData({ nombre: '', descripcion: '' });
+        setFormData({ nombre: '', descripcion: '', jefeId: '' });
         setIsFormModalOpen(true);
     };
 
     const handleAbrirEditar = (dept) => {
         setDepartamentoAEditar(dept);
-        setFormData({ nombre: dept.nombre, descripcion: dept.descripcion });
+        setFormData({ nombre: dept.nombre, descripcion: dept.descripcion, jefeId: dept.jefeId || '' });
         setIsFormModalOpen(true);
     };
 
-    const handleGuardarDepartamento = (e) => {
+    const handleGuardarDepartamento = async (e) => {        
         e.preventDefault();
-        // Lógica simulada de guardado
-        setIsFormModalOpen(false);
+        setIsSaving(true);
+
+        if (departamentoAEditar) {
+            // TODO: Implementar lógica de edición (PUT)
+            setIsSaving(false);
+            setIsFormModalOpen(false);
+        } else {
+            // Aseguramos el envío de null primitivo si no hay selección
+            const jefeIdLimpio = (formData.jefeId === "" || formData.jefeId === "0" || !formData.jefeId) 
+                ? null 
+                : Number(formData.jefeId);
+
+            const payload = {
+                nombre: formData.nombre,
+                descripcion: formData.descripcion,
+                jefeId: jefeIdLimpio 
+            };
+
+            const resultado = await crearDepartamento(payload);
+
+            if (resultado.exito) {
+                const jefeSeleccionado = jefesDisponibles.find(j => j.id === jefeIdLimpio);
+                const nombreJefeVisual = jefeSeleccionado ? jefeSeleccionado.nombreCompleto : (resultado.data?.nombreJefe || 'Sin jefe asignado');
+
+                const nuevoDepto = {
+                    id: resultado.data?.id || Math.random(), 
+                    nombre: resultado.data?.nombre || formData.nombre,
+                    descripcion: resultado.data?.descripcion || formData.descripcion,
+                    jefeNombre: nombreJefeVisual,
+                    trabajadores: resultado.data?.totalEmpleados || 0, 
+                    estado: resultado.data?.estado || 'Activo'
+                };
+
+                setDepartamentos(prev => [...prev, nuevoDepto]);
+                setFormData({ nombre: '', descripcion: '', jefeId: '' });
+                setIsFormModalOpen(false);
+            } else {
+                console.error("Falló la creación:", resultado.mensaje);
+            }
+            setIsSaving(false);
+        }
     };
 
     const handleToggleEstado = (dept) => {
@@ -80,6 +163,7 @@ export default function GestionDepartamentos() {
     };
 
     const ejecutarCambioEstado = () => {
+        // TODO:  tarea Implementar llamada al backend para cambio de estado
         setDepartamentos(departamentos.map(d => 
             d.id === confirmModal.departamentoId ? { ...d, estado: confirmModal.nuevoEstado } : d
         ));
@@ -94,34 +178,34 @@ export default function GestionDepartamentos() {
                     <h1 className="text-2xl sm:text-3xl font-bold text-[#0F2C59]">Gestión de Departamentos</h1>
                     <p className="text-sm sm:text-base text-gray-500 mt-1">Administra los departamentos y áreas de la empresa</p>
                 </div>
-                <div className='w-full sm:w-auto' >
-                <Button onClick={handleAbrirCrear} className="w-full sm:w-auto justify-center py-3 gap-2 bg-green-600 hover:bg-green-700">
-                    <Plus size={20}  />
-                    Nuevo Departamento
-                </Button>
+                <div className='w-full sm:w-auto'>
+                    <Button onClick={handleAbrirCrear} className="w-full sm:w-auto justify-center py-3 gap-2 bg-green-600 hover:bg-green-700">
+                        <Plus size={20}  />
+                        Nuevo Departamento
+                    </Button>
                 </div>
             </div>
 
-            {/* Stats  */}
+            {/* Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
                 <Card className="p-6 flex items-center gap-4 border-none shadow-sm">
-                        <div className="bg-gray-200 p-3 rounded-lg">
-                            <Building2 className="text-gray-600" size={24} />
-                        </div>
-                        <div>
-                            <p className="text-sm text-gray-500 font-medium">Total Departamentos</p>
-                            <p className="text-2xl sm:text-3xl font-bold text-[#0F2C59]">{stats.total}</p>
+                    <div className="bg-gray-200 p-3 rounded-lg">
+                        <Building2 className="text-gray-600" size={24} />
+                    </div>
+                    <div>
+                        <p className="text-sm text-gray-500 font-medium">Total Departamentos</p>
+                        <p className="text-2xl sm:text-3xl font-bold text-[#0F2C59]">{stats.total}</p>
                     </div>
                 </Card>
 
                 <Card className="p-6 flex items-center gap-4 border-none shadow-sm">
-                        <div className="bg-green-50 p-3 rounded-lg">
-                            <CheckCircle className="text-green-600" size={24} />
-                        </div>
-                        <div>
-                            <p className="text-sm font-medium text-gray-500 mb-1">Activos</p>
-                            <p className="text-2xl sm:text-3xl font-bold text-green-600">{stats.activos}</p>
-                        </div>
+                    <div className="bg-green-50 p-3 rounded-lg">
+                        <CheckCircle className="text-green-600" size={24} />
+                    </div>
+                    <div>
+                        <p className="text-sm font-medium text-gray-500 mb-1">Activos</p>
+                        <p className="text-2xl sm:text-3xl font-bold text-green-600">{stats.activos}</p>
+                    </div>
                 </Card>
 
                 <Card className="p-6">
@@ -130,7 +214,7 @@ export default function GestionDepartamentos() {
                             <XCircle className="text-red-600" size={24} />
                         </div>
                         <div>
-                            <p className="text-sm font-medium text-gray-5000 mb-1">Inactivos</p>
+                            <p className="text-sm font-medium text-gray-500 mb-1">Inactivos</p>
                             <p className="text-2xl sm:text-3xl font-bold text-red-600">{stats.inactivos}</p>
                         </div>
                     </div>
@@ -139,7 +223,6 @@ export default function GestionDepartamentos() {
 
             {/* Search and Filters */}
             <Card className="p-4 sm:p-6 mb-6 flex flex-col gap-4 border-none shadow-sm bg-white">
-                 {/* Buscador */}
                 <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                     <Input
@@ -152,7 +235,6 @@ export default function GestionDepartamentos() {
                 </div>
 
                 <div className="flex flex-col lg:flex-row gap-4 w-full justify-between lg:items-center">
-                    {/* Botones de Estado */}
                     <div className="flex flex-wrap gap-2 sm:gap-3">
                     {[
                         { id: 'Todos', label: 'Todos', icon: null },
@@ -173,94 +255,17 @@ export default function GestionDepartamentos() {
                         </button>
                     ))}
                     </div>
-            </div>
+                </div>
             </Card>
             
-             {/* LISTA DE DEPARTAMENTOS */}
-            <div className="grid grid-cols-1 gap-6">
-                {departamentosFiltrados.map((dept) => (
-                    <Card key={dept.id} className="overflow-hidden hover:shadow-md transition-shadow duration-300 border-gray-200 flex flex-col rounded-xl bg-white">
-                        <div className="p-4 sm:p-5 flex-1">
-                            
-                            {/* CABECERA */}
-                            <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-4 sm:mb-2">
-                                
-                                <div className="flex items-start gap-3 w-full md:w-auto">
-                                    {/* Avatar */}
-                                    <div className="w-12 h-12 sm:w-14 sm:h-14 bg-[#0F2C59] rounded-full flex items-center justify-center text-white font-bold text-xl flex-shrink-0 shadow-sm">
-                                        <Building2 size={24} />
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <h3 className="text-lg font-bold text-[#0F2C59] truncate">{dept.nombre}</h3>
-                                        
-                                        {/* Insignias */}
-                                        <div className="flex flex-wrap items-center gap-2 mt-1.5">
-                                            <div className="flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full whitespace-nowrap border border-blue-100">
-                                                <UserCheck size={14} />
-                                                <span>Jefe: {dept.jefe}</span>
-                                            </div>
-                                            <div className="flex items-center gap-1.5 px-3 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded-full whitespace-nowrap border border-gray-200">
-                                                <Users size={14} className="text-gray-500" />
-                                                <span>{dept.trabajadores} Trabajadores</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                {/* Acciones  */}
-                                <div className="flex flex-row md:flex-col justify-between items-center md:items-end w-full md:w-auto gap-4 md:gap-3 mt-2 md:mt-0">
-                                    {/* Estado */}
-                                    <span className={`px-3 py-1.5 sm:px-2.5 sm:py-1 rounded-full text-xs font-medium flex items-center gap-1.5 border ${
-                                        dept.estado === 'Activo' 
-                                        ? 'bg-green-50 text-green-700 border-green-200' 
-                                        : 'bg-red-50 text-red-700 border-red-200'
-                                    }`}>
-                                        {dept.estado === 'Activo' ? <Check size={14} /> : <XIcon size={14} />}
-                                        {dept.estado}
-                                    </span>
-                                    
-                                    {/* Botones */}
-                                    <div className="flex gap-2 w-full sm:w-auto">
-                                        <button
-                                            onClick={() => handleAbrirEditar(dept)}
-                                            className="flex-1 md:flex-none flex justify-center items-center gap-1.5 px-3 py-2 sm:py-1.5 border border-[#0F2C59] text-[#0F2C59] rounded-lg text-sm font-medium hover:bg-blue-50 transition-colors"
-                                            title="Editar"
-                                        >
-                                            <Edit2 size={16} />
-                                        </button>
-                                        
-                                        {dept.estado === 'Activo' ? (
-                                            <button
-                                                onClick={() => handleToggleEstado(dept)}
-                                                className='flex items-center gap-1 px-4 py-2 sm:py-1.5 border border-red-600 text-red-600 rounded-md hover:bg-red-50 transition-colors font-medium text-sm'
-                                            >
-                                                <XIcon size={16}/> Desactivar
-                                            </button>
-                                        ) : (
-                                            <button
-                                                onClick={() => handleToggleEstado(dept)}
-                                                className="flex items-center gap-1 px-4 py-2 sm:py-1.5 border border-green-600 text-green-600 rounded-md hover:bg-green-50 transition-colors font-medium text-sm"
-                                            >
-                                                <Check size={16}/> Activar
-                                            </button>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                            {/* DESCRIPCIÓN  */}
-                            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mt-4 pt-4 border-t border-gray-100">
-                                <p className="text-sm text-gray-600 leading-relaxed w-full">
-                                    <span className="font-semibold text-gray-700 mr-2">Descripción:</span> 
-                                    {dept.descripcion}
-                                </p>
-                            </div>
-
-                        </div>
-                    </Card>
-                ))}
-            </div>
-
-            {/* Sin resultados */}
-            {departamentosFiltrados.length === 0 && (
+            {/* Listado de Departamentos */}
+            {isLoading ? (
+                <div className="flex flex-col items-center justify-center py-16 bg-white rounded-xl border border-gray-100 shadow-sm">
+                    <Loader2 size={40} className="text-[#0F2C59] animate-spin mb-4" />
+                    <h3 className="text-lg font-semibold text-gray-900 mb-1">Cargando departamentos...</h3>
+                    <p className="text-gray-500">Por favor, espera un momento.</p>
+                </div>
+            ) : departamentosFiltrados.length === 0 ? (
                 <div className="text-center py-16 bg-white rounded-xl border border-gray-100 shadow-sm">
                     <div className="bg-gray-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
                         <Building2 size={32} className="text-gray-400" />
@@ -268,44 +273,93 @@ export default function GestionDepartamentos() {
                     <h3 className="text-lg font-semibold text-gray-900 mb-1">No se encontraron departamentos</h3>
                     <p className="text-gray-500">Intenta con otros filtros o términos de búsqueda</p>
                 </div>
+            ) : (
+                <div className="grid grid-cols-1 gap-6">
+                    {departamentosFiltrados.map((dept) => (
+                        <Card key={dept.id} className="overflow-hidden hover:shadow-md transition-shadow duration-300 border-gray-200 flex flex-col rounded-xl bg-white">
+                            <div className="p-4 sm:p-5 flex-1">
+                                <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-4 sm:mb-2">
+                                    <div className="flex items-start gap-3 w-full md:w-auto flex-1">
+                                        <div className="w-12 h-12 sm:w-14 sm:h-14 bg-[#0F2C59] rounded-full flex items-center justify-center text-white font-bold text-xl flex-shrink-0 shadow-sm">
+                                            <Building2 size={24} />
+                                        </div>
+                                        <div className="flex-1 min-w-0 w-full">
+                                            <h3 className="text-lg font-bold text-[#0F2C59] truncate">{dept.nombre}</h3>
+                                            
+                                            <div className="flex flex-col gap-3 mt-2">
+                                                <p className="text-sm text-gray-600 leading-relaxed line-clamp-2">
+                                                    {dept.descripcion}
+                                                </p>
+                                                
+                                                <div className="flex flex-wrap items-center gap-3 mt-1">
+                                                    <div className="flex items-center gap-1.5 text-xs sm:text-sm text-gray-600 bg-gray-50 px-2.5 py-1.5 rounded-md border border-gray-200">
+                                                        <UserCheck size={16} className="text-[#0F2C59]" />
+                                                        <span className="font-semibold text-gray-700">Jefe:</span>
+                                                        <span className="truncate max-w-[150px]">{dept.jefeNombre}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-1.5 text-xs sm:text-sm text-gray-600 bg-gray-50 px-2.5 py-1.5 rounded-md border border-gray-200">
+                                                        <Users size={16} className="text-[#0F2C59]" />
+                                                        <span className="font-semibold text-gray-700">Empleados:</span>
+                                                        <span>{dept.trabajadores}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="flex flex-row md:flex-col justify-between items-center md:items-end w-full md:w-auto gap-4 md:gap-3 mt-2 md:mt-0 flex-shrink-0">
+                                        <span className={`px-3 py-1.5 sm:px-2.5 sm:py-1 rounded-full text-xs font-medium flex items-center gap-1.5 border ${
+                                            dept.estado === 'Activo' 
+                                            ? 'bg-green-50 text-green-700 border-green-200' 
+                                            : 'bg-red-50 text-red-700 border-red-200'
+                                        }`}>
+                                            {dept.estado === 'Activo' ? <Check size={14} /> : <XIcon size={14} />}
+                                            {dept.estado}
+                                        </span>
+                                        
+                                        <div className="flex gap-2 w-full sm:w-auto">
+                                            <button
+                                                onClick={() => handleAbrirEditar(dept)}
+                                                className="flex-1 md:flex-none flex justify-center items-center gap-1.5 px-3 py-2 sm:py-1.5 border border-[#0F2C59] text-[#0F2C59] rounded-lg text-sm font-medium hover:bg-blue-50 transition-colors"
+                                                title="Editar"
+                                            >
+                                                <Edit2 size={16} />
+                                            </button>
+                                            
+                                            {dept.estado === 'Activo' ? (
+                                                <button
+                                                    onClick={() => handleToggleEstado(dept)}
+                                                    className='flex items-center gap-1 px-4 py-2 sm:py-1.5 border border-red-600 text-red-600 rounded-md hover:bg-red-50 transition-colors font-medium text-sm'
+                                                >
+                                                    <XIcon size={16}/> Desactivar
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    onClick={() => handleToggleEstado(dept)}
+                                                    className="flex items-center gap-1 px-4 py-2 sm:py-1.5 border border-green-600 text-green-600 rounded-md hover:bg-green-50 transition-colors font-medium text-sm"
+                                                >
+                                                    <Check size={16}/> Activar
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </Card>
+                    ))}
+                </div>
             )}
 
-            {/* Modales */}
-            <Modal 
-                isOpen={isFormModalOpen} 
+            {/* Modales*/}
+            <DepartamentoFormModal
+                isOpen={isFormModalOpen}
                 onClose={() => setIsFormModalOpen(false)}
-                title={departamentoAEditar ? "Editar Departamento" : "Crear Nuevo Departamento"}
-            >
-                <form onSubmit={handleGuardarDepartamento} className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Nombre del departamento*</label>
-                        <Input 
-                            value={formData.nombre}
-                            onChange={(e) => setFormData({...formData, nombre: e.target.value})}
-                            placeholder="Ej. Recursos Humanos"
-                            required
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Descripción*</label>
-                        <textarea 
-                            value={formData.descripcion}
-                            onChange={(e) => setFormData({...formData, descripcion: e.target.value})}
-                            className="w-full px-3 py-2 border border-gray-200 rounded-lg outline-none focus:border-[#0F2C59] focus:ring-1 focus:ring-[#0F2C59] min-h-[100px] resize-none"
-                            placeholder="Funciones del departamento..."
-                            required
-                        />
-                    </div>
-                    <div className="flex gap-3 justify-end pt-4 mt-6 border-t border-gray-100">
-                        <Button type="button" variant="outline" onClick={() => setIsFormModalOpen(false)}>
-                            Cancelar
-                        </Button>
-                        <Button type="submit" className="bg-[#0F2C59] hover:bg-[#0a1f3d] text-white">
-                            {departamentoAEditar ? 'Guardar Cambios' : 'Crear Departamento'}
-                        </Button>
-                    </div>
-                </form>
-            </Modal>
+                onSubmit={handleGuardarDepartamento}
+                isSaving={isSaving}
+                departamentoAEditar={departamentoAEditar}
+                formData={formData}
+                setFormData={setFormData}
+                jefesDisponibles={jefesDisponibles}
+            />
 
             <ConfirmModal
                 isOpen={confirmModal.isOpen}
