@@ -19,7 +19,7 @@ const obtenerColorRol = (rol) => {
         case 'jefe_de_departamento':
         case 'jefe':
             return 'bg-purple-200 text-purple-700';
-        case 'recursos_humanos':
+        case 'auditor':
         case 'rh':
             return 'bg-green-200 text-green-700';
         case 'empleado':
