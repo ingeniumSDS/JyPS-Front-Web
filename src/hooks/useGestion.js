@@ -72,9 +72,20 @@ export const useGestion = () => {
         }
     };
 
-    // TAREA: ACTUALIZAR DEPTPS/ PUT
+    // ACTUALIZAR DEPARTAMENTO / PUT
 
-    // TAREA: ASIGNAR JF A DEPTOS / POST
+    // ASIGNAR JEFE DEPARTAMENTO / POST
+    const asignarUnJefe = async (departamentoId, jefeId) => {
+        try {
+            // Solo mandamos los IDs sin body, tal como lo marca Swagger
+            const respuesta = await request(`/departamentos/${departamentoId}/asignar-jefe?jefeId=${jefeId}`, 'POST');
+            return { exito: true, data: respuesta };
+            
+        } catch (err) {
+            console.error("Error al asignar jefe al departamento:", err);
+            return { exito: false, mensaje: err.message };
+        }
+    };
 
     // --- METODOS DE LECTURA (GET) ---
 
@@ -142,6 +153,7 @@ export const useGestion = () => {
     // TAREA: CAMBIO DE ESTADO DEPTOS/ PATCH
 
     return {
+        asignarUnJefe,
         crearDepartamento,
         cambiarEstadoUsuario,
         isLoading,
