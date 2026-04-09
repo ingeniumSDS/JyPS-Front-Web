@@ -30,8 +30,8 @@ const obtenerRutaPorRol = (datosDelToken) => {
     switch(rolUsuario) {
         case 'ADMINISTRADOR': return '/administrador';
         case 'GUARDIA':       return '/guardia';
-        case 'JEFE':          return '/jefe-area';
-        case 'RH':            return '/recursos-humanos';
+        case 'JEFE_DE_DEPARTAMENTO':          return '/jefe-area';
+        case 'AUDITOR':            return '/recursos-humanos';
         case 'TRABAJADOR':    return '/trabajador';
         default:              return '/trabajador'; 
     }
