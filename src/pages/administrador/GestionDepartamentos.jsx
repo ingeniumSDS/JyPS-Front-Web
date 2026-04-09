@@ -4,8 +4,8 @@ import { Card } from '../../components/Card';
 import { Button } from '../../components/Button'; 
 import { Input } from '../../components/Input';
 import ConfirmModal from '../../components/modals/ConfirmModal';
-import DepartamentoFormModal from '../../components/modals/DepartamentoFormModal'; // Ajusta la ruta según tu estructura
-
+import DepartamentoFormModal from '../../components/modals/DepartamentoFormModal';
+import { toast } from 'sonner';
 import { useGestion } from '../../hooks/useGestion'; 
 
 export default function GestionDepartamentos() {
@@ -17,7 +17,7 @@ export default function GestionDepartamentos() {
     const [filtroEstado, setFiltroEstado] = useState('Todos');
     const [isSaving, setIsSaving] = useState(false);
 
-    const { obtenerDepartamento, crearDepartamento, obtenerUsuarios } = useGestion();
+    const { obtenerDepartamento, crearDepartamento, obtenerUsuarios, asignarUnJefe } = useGestion();
 
     const [isFormModalOpen, setIsFormModalOpen] = useState(false);
     const [departamentoAEditar, setDepartamentoAEditar] = useState(null);
@@ -110,11 +110,35 @@ export default function GestionDepartamentos() {
         setIsSaving(true);
 
         if (departamentoAEditar) {
-            // TODO: Implementar lógica de edición (PUT)
+            // 1. Limpiamos el jefeId
+            const jefeIdLimpio = (formData.jefeId === "" || formData.jefeId === "0" || !formData.jefeId) 
+                ? null 
+                : Number(formData.jefeId);
+
+            // 2. Solo llamamos al endpoint de asignar jefe
+            const resultado = await asignarUnJefe(departamentoAEditar.id, jefeIdLimpio);
+
+            if (resultado.exito) {
+                const jefeSeleccionado = jefesDisponibles.find(j => j.id === jefeIdLimpio);
+                const nombreJefeVisual = jefeSeleccionado ? jefeSeleccionado.nombreCompleto : 'Sin jefe asignado';
+
+                setDepartamentos(prev => prev.map(dept => 
+                    dept.id === departamentoAEditar.id 
+                        ? { ...dept, jefeNombre: nombreJefeVisual, jefeId: jefeIdLimpio } 
+                        : dept
+                ));
+                
+                setFormData({ nombre: '', descripcion: '', jefeId: '' });
+                setIsFormModalOpen(false);
+
+                toast.success('Jefe asignado correctamente'); 
+            } else {
+                console.error("Falló la asignación del jefe:", resultado.mensaje);
+                toast.error('Hubo un error al asignar al jefe');
+            }
             setIsSaving(false);
-            setIsFormModalOpen(false);
         } else {
-            // Aseguramos el envío de null primitivo si no hay selección
+            // CREAR DEPARTAMENTO
             const jefeIdLimpio = (formData.jefeId === "" || formData.jefeId === "0" || !formData.jefeId) 
                 ? null 
                 : Number(formData.jefeId);
@@ -143,8 +167,11 @@ export default function GestionDepartamentos() {
                 setDepartamentos(prev => [...prev, nuevoDepto]);
                 setFormData({ nombre: '', descripcion: '', jefeId: '' });
                 setIsFormModalOpen(false);
+
+                toast.success('Departamento creado exitosamente');
             } else {
                 console.error("Falló la creación:", resultado.mensaje);
+                toast.error(resultado.mensaje || 'Hubo un error al crear el departamento');
             }
             setIsSaving(false);
         }
