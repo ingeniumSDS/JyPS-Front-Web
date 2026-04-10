@@ -95,7 +95,7 @@ export default function SolicitarPase() {
       toast.success('Pase solicitado correctamente');
       navigate(-1);
     } else {
-      toast.error(resultado.mensaje || 'Error al procesar la solicitud');
+      toast.error( 'Error al procesar la solicitud');
     }
   };
 
