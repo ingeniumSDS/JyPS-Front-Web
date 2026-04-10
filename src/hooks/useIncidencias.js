@@ -28,11 +28,34 @@ export const useIncidencias = () => {
             console.error("Error en crearPaseSalida:", error);
             return { exito: false, mensaje: error.message };
         }
-    };
+        };
+
+        const solicitarJustificante = async (datos, listaArchivos) => {
+            try {
+                const formData = new FormData();
+                
+                // objeto completo 
+                formData.append('data', new Blob([JSON.stringify(datos)], {
+                    type: 'application/json'
+                }));
+
+                if (listaArchivos && listaArchivos.length > 0) {
+                    listaArchivos.forEach(file => {
+                        formData.append('archivos', file); 
+                    });
+                }
+
+                const response = await request('/justificantes', 'POST', formData);
+                return { exito: true, data: response };
+            } catch (err) {
+                return { exito: false, mensaje: err.message };
+            }
+        };
 
     return {
         crearPaseSalida,
-        isSavingPase: isLoading,
-        errorPase: error
+        solicitarJustificante,
+        isLoadingRequest: isLoading, 
+        errorRequest: error
     };
 };
