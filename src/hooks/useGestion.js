@@ -78,7 +78,7 @@ export const useGestion = () => {
     const asignarUnJefe = async (departamentoId, jefeId) => {
         try {
             // Solo mandamos los IDs sin body, tal como lo marca Swagger
-            const respuesta = await request(`/departamentos/${departamentoId}/asignar-jefe?jefeId=${jefeId}`, 'POST');
+            const respuesta = await request(`/departamentos/${departamentoId}/asignar-jefe?jefeId=${jefeId}`, 'PATCH');
             return { exito: true, data: respuesta };
             
         } catch (err) {
