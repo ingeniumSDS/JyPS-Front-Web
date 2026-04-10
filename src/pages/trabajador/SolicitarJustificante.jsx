@@ -103,7 +103,7 @@ export default function SolicitarJustificante() {
         if (resultado.exito) {
             toast.success('¡Justificante enviado correctamente!');
             //ruta por definir
-            navigate('/trabajador/historial'); 
+            navigate(-1, { replace: true }); 
         } else {
             
             toast.error( 'Error al enviar el justifiacante');
@@ -191,7 +191,7 @@ export default function SolicitarJustificante() {
                     </div>
 
                     <div className="flex flex-col sm:flex-row gap-3 pt-4">
-                        <Button type="button" variant="outline" fullWidth onClick={() => navigate(-1)}>Cancelar</Button>
+                        <Button type="button" variant="outline" fullWidth onClick={() => navigate(-1    )}>Cancelar</Button>
                         <Button 
                             type="submit" 
                             fullWidth 
