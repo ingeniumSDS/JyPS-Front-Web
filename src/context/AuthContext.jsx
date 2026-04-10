@@ -25,7 +25,8 @@ export const AuthProvider = ({ children }) => {
                 nombre: datosDelBackend.nombreCompleto || "Sin Nombre",
                 rol: (datosDelBackend.roles && datosDelBackend.roles[0]) || "Usuario",
                 email: datosDelBackend.correo || "Sin Correo",
-                telefono: datosDelBackend.telefono || "Sin Teléfono"
+                telefono: datosDelBackend.telefono || "Sin Teléfono",
+                departamentoId: datosDelBackend.departamentoId
             });
 
         } catch (error) {
