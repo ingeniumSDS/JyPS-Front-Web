@@ -1,80 +1,71 @@
-import { createContext, useContext, useState, useEffect } from 'react';
-import { useApi } from '../hooks/useApi'; 
+import { createContext, useContext, useState, useEffect } from "react";
 
-// CONTEXT 
-const AuthContext = createContext();
+export const AuthContext = createContext();
 
-// PROVIDER 
+// Decodifica el payload de un token JWT a un objeto JSON
+const decodificarJwt = (token) => {
+    try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        return JSON.parse(jsonPayload);
+    } catch (error) {
+        console.error("Error en parsing de JWT:", error);
+        return null;
+    }
+};
+
 export const AuthProvider = ({ children }) => {
-    
-    // ESTADOS 
     const [user, setUser] = useState(null);
-    const [isLoadingSession, setIsLoadingSession] = useState(true);
-    const { request } = useApi();
+    const [isLoading, setIsLoading] = useState(true); 
 
-    //  LOGICA: DATOS 
-    const cargarDatosDelUsuario = async (tokenGuardado) => {
-        try {
-            const payload = JSON.parse(atob(tokenGuardado.split('.')[1]));
-            const usuarioId = payload.id; 
-
-            const datosDelBackend = await request(`/usuarios/${usuarioId}`, 'GET');
-            
-            setUser({
-                id: usuarioId,
-                nombre: datosDelBackend.nombreCompleto || "Sin Nombre",
-                rol: (datosDelBackend.roles && datosDelBackend.roles[0]) || "Usuario",
-                email: datosDelBackend.correo || "Sin Correo",
-                telefono: datosDelBackend.telefono || "Sin Teléfono",
-                departamentoId: datosDelBackend.departamentoId
-            });
-
-        } catch (error) {
-            console.error(" Falló la conexion con el Backend:", error);
-
-            setUser({
-                nombre: "Modo Fallback (Sin Backend)",
-                rol: "Administrador",
-                email: "error@conexion.com",
-                telefono: "000-0000"
-            });
-
-        } finally {
-            setIsLoadingSession(false);
-        }
-    };
-
-    // EFECTOS 
     useEffect(() => {
-        const token = localStorage.getItem('token');
-        if (token) {
-            cargarDatosDelUsuario(token);
-        } else {
-            setIsLoadingSession(false);
-        }
+        const revisarSesion = async () => {
+            try {
+                // Recupera el token crudo para validar existencia
+                const tokenGuardado = localStorage.getItem("usuario");
+                
+                if (tokenGuardado) {
+                    // Extrae los claims del payload para autorización
+                    const usuarioDecodificado = decodificarJwt(tokenGuardado);
+                    
+                    if (usuarioDecodificado) {
+                        setUser(usuarioDecodificado); // Hidrata el estado
+                    } else {
+                        localStorage.removeItem("usuario"); // Purga tokens corruptos
+                    }
+                }
+            } catch (error) {
+                console.error("Error durante la inicialización de sesión:", error);
+            } finally {
+                setIsLoading(false); // Libera el renderizado de la UI
+            }
+        };
+
+        revisarSesion();
     }, []);
 
-    // HANDLERS: SESION 
-    const iniciarSesion = async (nuevoToken) => {
-        localStorage.setItem('token', nuevoToken);
-        setIsLoadingSession(true);
-        await cargarDatosDelUsuario(nuevoToken);
+    const iniciarSesion = (tokenPuro) => {
+        // Extrae claims para manejo de RBAC (Role-Based Access Control)
+        const usuarioDecodificado = decodificarJwt(tokenPuro);
+        setUser(usuarioDecodificado); 
+        
+        // Persiste el token crudo para su inyección en headers HTTP
+        localStorage.setItem("usuario", tokenPuro); 
     };
 
     const cerrarSesion = () => {
-        localStorage.removeItem('token');
         setUser(null);
+        localStorage.removeItem("usuario");
     };
 
-    // RENDER 
     return (
-        <AuthContext.Provider value={{ user, isLoadingSession, iniciarSesion, cerrarSesion }}>
+        <AuthContext.Provider value={{ user, isLoading, iniciarSesion, cerrarSesion }}>
             {children}
         </AuthContext.Provider>
     );
 };
 
-// CUSTOM HOOK 
-export const useAuth = () => {
-    return useContext(AuthContext);
-};
+export const useAuth = () => useContext(AuthContext);
