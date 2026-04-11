@@ -25,7 +25,7 @@ export const useApi = () => {
             }
 
             // Guardamos token
-            const token = localStorage.getItem('token');
+            const token = localStorage.getItem('usuario');
             if (token) {
                 headers['Authorization'] = `Bearer ${token}`;
             }
