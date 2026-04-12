@@ -65,7 +65,7 @@ export const router = createBrowserRouter([
     {
       path: "/trabajador",
       element: (
-        <RutaProtegida rolesPermitidos={['TRABAJADOR']}>
+        <RutaProtegida rolesPermitidos={['EMPLEADO']}>
             <TrabajadorLayout/>
         </RutaProtegida>
       ),
@@ -83,7 +83,7 @@ export const router = createBrowserRouter([
     {
         path: "/recursos-humanos",
         element: (
-          <RutaProtegida rolesPermitidos={['RECURSOS_HUMANOS']}>
+          <RutaProtegida rolesPermitidos={['AUDITOR']}>
               <RRHHLayout />
           </RutaProtegida>
         ),
