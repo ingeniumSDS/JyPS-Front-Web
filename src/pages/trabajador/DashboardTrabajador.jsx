@@ -7,10 +7,10 @@ export default function DashboardTrabajador() {
     const navigate = useNavigate();
     const location = useLocation();
     
-    //  Extraemos el usuario real desde el AuthContext
+    // Extraemos datos desde el AuthContext
     const { user } = useAuth();
 
-    // Lógica de detección de rol para navegación
+    // Lógica de deteccion de rol para navegación
     const isAdmin = location.pathname.includes('/administrador');
     const isRRHH = location.pathname.includes('/recursos-humanos');
     const isJefe = location.pathname.includes('/jefe-area');
@@ -20,6 +20,11 @@ export default function DashboardTrabajador() {
     else if (isRRHH) basePath = '/recursos-humanos';
     else if (isJefe) basePath = '/jefe-area';
 
+    // --- CONSTRUCCION DE DATOS DEL USUARIO 
+    const nombreCompleto = user?.nombre 
+        ? `${user.nombre} ${user.apellidoPaterno || ''} ${user.apellidoMaterno || ''}`.trim() 
+        : "Usuario";
+
     return (
         <div className="pb-6 sm:pb-8 animate-fade-in mx-auto max-w-7xl px-2 sm:px-4">
 
@@ -28,19 +33,17 @@ export default function DashboardTrabajador() {
                 <h1 className="text-xl sm:text-2xl font-bold mb-1.5 leading-tight">
                     ¡Bienvenido de nuevo!
                 </h1>
-                {/* 3. Usamos el operador ?. para evitar errores si user es null momentáneamente */}
-                <p className="text-sm sm:text-base text-white/90 break-words">
-                    {user?.nombre || "Usuario"}
+                
+                {/* Mostramos el nombre completo armado arriba */}
+                <p className="text-sm sm:text-base text-white/90 break-words capitalize">
+                    {nombreCompleto}
                 </p>
+                
                 <div className="flex flex-col sm:flex-row sm:gap-4 mt-1">
+                    {/* El correo viene en user.sub según tu consola */}
                     <p className="text-xs sm:text-sm text-white/70 mt-1 break-all">
-                        {user?.email}
+                        {user?.sub || "Correo no disponible"}
                     </p>
-                    {user?.departamento && (
-                        <p className="text-xs sm:text-sm text-white/60 font-semibold uppercase">
-                            • {user.departamento}
-                        </p>
-                    )}
                 </div>
             </div>
 
