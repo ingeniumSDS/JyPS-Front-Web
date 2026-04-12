@@ -3,21 +3,33 @@ import { useState } from 'react';
 import { User, Mail, Phone, Lock } from 'lucide-react';
 import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
-import  ChangePasswordModal  from '../../components/modals/ChangePasswordModal'; 
+import ChangePasswordModal from '../../components/modals/ChangePasswordModal'; 
 
 export function Perfil() {
     
-    //  CONTEXTO 
+    // CONTEXTO 
     const { user, isLoadingSession } = useAuth(); 
     
-    //  ESTADOS 
+    // ESTADOS 
     const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
 
-    //  HANDLERS 
+    // HANDLERS 
     const handleOpenChangePasswordModal = () => setIsChangePasswordModalOpen(true);
     const handleCloseChangePasswordModal = () => setIsChangePasswordModalOpen(false);
 
-    //  RENDER: CARGA 
+    // --- EXTRACCIÓN DE DATOS ACTUALIZADA ---
+    // 1. El correo ahora viene en 'sub' según el token JWT
+    const correoUsuario = user?.sub || 'No registrado';
+    
+    // 2. El rol es un arreglo. Tomamos el primero y limpiamos los guiones bajos (ej. JEFE_DE_DEPARTAMENTO)
+    const rolUsuario = user?.roles?.[0]?.replace(/_/g, ' ') || 'Sin Rol';
+    
+    // 3. (Opcional) Podemos juntar nombre y apellido si tu token los trae separados
+    const nombreCompleto = user?.nombre 
+        ? `${user.nombre} ${user?.apellidoPaterno || ''}`.trim() 
+        : 'Usuario';
+
+    // RENDER: CARGA 
     if (isLoadingSession) {
         return (
             <div className="flex items-center justify-center h-full p-8">
@@ -45,14 +57,15 @@ export function Perfil() {
                 <div className="text-center mb-8 flex flex-col items-center justify-center">
                     <div className="w-24 h-24 bg-[#0F2C59] rounded-full flex items-center justify-center mb-4">
                         <span className="text-3xl font-bold text-white">
-                            {user?.nombre?.charAt(0) || <User size={48} className="text-white" />}
+                            {nombreCompleto.charAt(0).toUpperCase()}
                         </span>
                     </div>
                     <h2 className="text-xl font-bold text-[#0F2C59]">
-                        {user?.nombre || 'Usuario'}
+                        {nombreCompleto}
                     </h2>
+                    {/* Aplicamos capitalize para que no salga todo en mayúsculas gritando */}
                     <p className="text-sm text-gray-500 mt-1 capitalize">
-                        {user?.rol || 'Sin Rol'}
+                        {rolUsuario.toLowerCase()}
                     </p>
                 </div>
 
@@ -67,7 +80,7 @@ export function Perfil() {
                         <div>
                             <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">Correo Institucional</p>
                             <p className="font-medium text-[#0F2C59] mt-0.5">
-                                {user?.email || 'No registrado'}
+                                {correoUsuario}
                             </p>
                         </div>
                     </div>
