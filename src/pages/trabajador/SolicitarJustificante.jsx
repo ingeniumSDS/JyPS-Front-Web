@@ -1,10 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom'; 
 import { ArrowLeft, Upload, FileText, X, Loader2 } from 'lucide-react';
 import { Card } from '../../components/Card';
 import { Input } from '../../components/Input';
 import { Button } from '../../components/Button';
-import { useApi } from '../../hooks/useApi';
 import { useIncidencias } from '../../hooks/useIncidencias';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'sonner';
@@ -30,40 +29,13 @@ const calcularFechaMaxima = () => {
 export default function SolicitarJustificante() {
     const navigate = useNavigate();
     const { user } = useAuth();
-    const { request } = useApi();
     const { solicitarJustificante, isLoadingRequest } = useIncidencias();
 
     // --- Estados ---
     const [formData, setFormData] = useState({ fecha: '', detalles: '' });
     const [archivos, setArchivos] = useState([]);
     const [detallesError, setDetallesError] = useState('');
-    const [jefeId, setJefeId] = useState(null);
-    const [cargandoJefe, setCargandoJefe] = useState(true);
-
-    // --- Carga automática del Jefe ---
-    useEffect(() => {
-        const obtenerJefe = async () => {
-            try {
-                setCargandoJefe(true);
-                // Si el backend da error de CORS aquí, el flujo se detiene
-                const departamentos = await request('/departamentos', 'GET');
-                const miDepto = departamentos.find(
-                    d => d.nombre === user?.departamento || d.id === user?.departamentoId
-                );
-                
-                if (miDepto?.jefeId) {
-                    setJefeId(miDepto.jefeId);
-                } else {
-                    toast.error("Tu departamento no tiene un jefe asignado.");
-                }
-            } catch (error) {
-                console.error("Error al obtener jefe:", error);
-            } finally {
-                setCargandoJefe(false);
-            }
-        };
-        if (user) obtenerJefe();
-    }, [user, request]);
+    const [isSubmitting, setIsSubmitting] = useState(false); // Estado local para bloqueo inmediato
 
     // --- Handlers ---
     const handleDetallesChange = (e) => {
@@ -83,37 +55,60 @@ export default function SolicitarJustificante() {
         setArchivos(prev => prev.filter((_, i) => i !== index));
     };
 
+    // --- Lógica de Bloqueo de Botón ---
+    const estaCargando = isLoadingRequest || isSubmitting;
+    
+    const botonBloqueado = 
+        estaCargando || 
+        !formData.fecha || 
+        formData.detalles.length < 25 || 
+        archivos.length === 0 || 
+        !user?.departamentoId;
+
     const handleSubmit = async (e) => {
         e.preventDefault();
-    
-    if (!jefeId) return toast.error('No se puede enviar: Falta ID del jefe.');
+        
+        if (botonBloqueado) return;
 
-    // Mapeo 
-    const datosPayload = {
-        empleadoId: user?.id,
-        jefeId: jefeId,
-        fechaSolicitud: new Date().toISOString().split('T')[0], 
-        fechaSolicitada: formData.fecha, 
-        descripcion: formData.detalles,
-        estado: "PENDIENTE",
-        comentario: "" 
+        // Bloqueo inmediato de la UI
+        setIsSubmitting(true);
+
+        const datosPayload = {
+            empleadoId: Number(user?.id),
+            nombreCompleto: `${user?.nombre} ${user?.apellidoPaterno || ''}`.trim(),
+            jefeId: Number(user?.departamentoId), 
+            fechaSolicitud: new Date().toISOString().split('T')[0], 
+            fechaSolicitada: formData.fecha, 
+            descripcion: formData.detalles,
+            estado: "PENDIENTE",
+            comentario: "" 
         };
-        const resultado = await solicitarJustificante(datosPayload, archivos);
 
-        if (resultado.exito) {
-            toast.success('¡Justificante enviado correctamente!');
-            //ruta por definir
-            navigate(-1, { replace: true }); 
-        } else {
-            
-            toast.error( 'Error al enviar el justifiacante');
+        try {
+            const resultado = await solicitarJustificante(datosPayload, archivos);
+
+            if (resultado.exito) {
+                toast.success('¡Justificante enviado correctamente!');
+                navigate(-1, { replace: true }); 
+            } else {
+                toast.error('Error al enviar el justificante');
+                setIsSubmitting(false); 
+            }
+        } catch (error) {
+            toast.error('Ocurrió un error inesperado.');
+            setIsSubmitting(false); //gir error de red
         }
     };
 
     return (
         <div className="pb-8 max-w-3xl mx-auto animate-fade-in px-4">
             <div className="flex items-center gap-3 mb-6">
-                <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                <button 
+                    type="button" 
+                    onClick={() => navigate(-1)} 
+                    disabled={estaCargando}
+                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-30"
+                >
                     <ArrowLeft size={20} className="text-[#0F2C59]"/>
                 </button>
                 <h1 className="text-xl sm:text-2xl font-bold text-[#0F2C59]">Solicitar Justificante</h1>
@@ -122,8 +117,8 @@ export default function SolicitarJustificante() {
             <Card className="p-4 sm:p-8 border-t-4 border-t-[#28A745]">
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="grid sm:grid-cols-2 gap-4">
-                        <Input label="Nombre Completo" value={user?.nombre || ''} disabled className="bg-gray-50" />
-                        <Input label="Correo Institucional" value={user?.email || ''} disabled className="bg-gray-50" />
+                        <Input label="Nombre Completo" value={`${user?.nombre} ${user?.apellidoPaterno || ''}`} disabled className="bg-gray-50" />
+                        <Input label="Departamento" value={user?.nombreDepartamento || 'Sin asignar'} disabled className="bg-gray-50" />
                     </div>
 
                     <div className="grid sm:grid-cols-2 gap-4">
@@ -134,6 +129,7 @@ export default function SolicitarJustificante() {
                                 value={formData.fecha}
                                 onChange={(e) => setFormData({ ...formData, fecha: e.target.value })}
                                 required
+                                disabled={estaCargando}
                                 min={calcularFechaMinima()}
                                 max={calcularFechaMaxima()}
                             />
@@ -144,12 +140,13 @@ export default function SolicitarJustificante() {
                     <div>
                         <label className="block mb-2 font-medium text-gray-700 text-sm">Motivo de Inasistencia *</label>
                         <textarea
-                            className={`w-full p-3 text-sm border rounded-lg focus:ring-2 outline-none transition-colors resize-none ${detallesError ? 'border-red-500' : 'border-gray-300'}`}
+                            className={`w-full p-3 text-sm border rounded-lg focus:ring-2 outline-none transition-colors resize-none ${detallesError ? 'border-red-500' : 'border-gray-300'} ${estaCargando ? 'bg-gray-50 opacity-70' : ''}`}
                             rows={4}
                             placeholder="Describe detalladamente el motivo..."
                             value={formData.detalles}
                             onChange={handleDetallesChange}
                             required
+                            disabled={estaCargando}
                         />
                         <div className="flex justify-between mt-1">
                             <p className="text-xs text-gray-400">{detallesError || 'Detalla tu situación para agilizar la aprobación.'}</p>
@@ -158,8 +155,8 @@ export default function SolicitarJustificante() {
                     </div>
 
                     <div>
-                        <label className="block mb-2 font-medium text-gray-700 text-sm">Evidencia / Receta (Recomendado)</label>
-                        <div className="border-2 border-gray-200 border-dashed rounded-lg bg-gray-50 p-3 transition-all">
+                        <label className="block mb-2 font-medium text-gray-700 text-sm">Evidencia / Receta (Requerido) *</label>
+                        <div className={`border-2 border-gray-200 border-dashed rounded-lg bg-gray-50 p-3 transition-all ${estaCargando ? 'opacity-50 pointer-events-none' : ''}`}>
                             {archivos.length === 0 ? (
                                 <label className="flex flex-col items-center justify-center py-4 cursor-pointer hover:bg-gray-100 rounded-md">
                                     <Upload className="w-6 h-6 mb-2 text-gray-400" />
@@ -175,7 +172,12 @@ export default function SolicitarJustificante() {
                                                     <FileText size={14} className="text-[#28A745]" />
                                                     <span className="truncate max-w-[150px]">{archivo.name}</span>
                                                 </div>
-                                                <button type="button" onClick={() => eliminarArchivo(index)} className="text-red-500 p-1 hover:bg-red-50 rounded">
+                                                <button 
+                                                    type="button" 
+                                                    onClick={() => eliminarArchivo(index)} 
+                                                    className="text-red-500 p-1 hover:bg-red-50 rounded"
+                                                    disabled={estaCargando}
+                                                >
                                                     <X size={14} />
                                                 </button>
                                             </div>
@@ -191,16 +193,26 @@ export default function SolicitarJustificante() {
                     </div>
 
                     <div className="flex flex-col sm:flex-row gap-3 pt-4">
-                        <Button type="button" variant="outline" fullWidth onClick={() => navigate(-1    )}>Cancelar</Button>
+                        <Button 
+                            type="button" 
+                            variant="outline" 
+                            fullWidth 
+                            onClick={() => navigate(-1)}
+                            disabled={estaCargando}
+                        >
+                            Cancelar
+                        </Button>
                         <Button 
                             type="submit" 
                             fullWidth 
-                            disabled={isLoadingRequest || cargandoJefe || !jefeId}
-                            className="bg-[#28A745] hover:bg-[#218838] text-white"
+                            disabled={botonBloqueado}
+                            className="bg-[#28A745] hover:bg-[#218838] text-white disabled:bg-gray-400 disabled:cursor-not-allowed"
                         >
-                            {isLoadingRequest ? (
-                                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Enviando...</>
-                            ) : 'Enviar Solicitud'}
+                            {estaCargando ? (
+                                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Enviando solicitud...</>
+                            ) : (
+                                'Enviar Solicitud'
+                            )}
                         </Button>
                     </div>
                 </form>
