@@ -4,13 +4,16 @@ import { useState, useCallback } from 'react';
 export const useIncidencias = () => {
     const { request, isLoading, error } = useApi();
 
-    // Crear Pase de Salida (POST /pases)
-    const crearPaseSalida = async (datosPase, archivos) => {
+       // Crear Pase de Salida (POST /pases)
+        const crearPaseSalida = async (datosPase, archivos) => {
         try {
             const formData = new FormData();
 
-            // Los datos se envían como un Blob JSON bajo la llave 'data'
-            formData.append('data', new Blob([JSON.stringify(datosPase)], {
+            // ID null si es nuevo
+            const { id, ...datosSinId } = datosPase;
+
+            // 'data' y JSON
+            formData.append('data', new Blob([JSON.stringify(datosSinId)], {
                 type: 'application/json'
             }));
 
@@ -33,7 +36,7 @@ export const useIncidencias = () => {
         try {
             const formData = new FormData();
 
-            // Los datos se envían como un Blob JSON bajo la llave 'data'
+            // JSON bajo 'Data'
             formData.append('data', new Blob([JSON.stringify(datos)], {
                 type: 'application/json'
             }));
