@@ -1,17 +1,29 @@
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, LayoutGrid, FileText, User, GraduationCap, LogOut } from 'lucide-react';
+import { Home, FileText, User, GraduationCap, LogOut } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 export default function TrabajadorLayout() {
     const navigate = useNavigate();
     const location = useLocation();
 
-    // Simulacion de usuario
-    const user = { nombre: "Trabajador Prueba", rol: "trabajador" };
+    // Extraemos el usuario 
+    const { user, logout } = useAuth();
 
-    //cerrar sesion logica
+    //  lógica de cerrar sesión 
     const handleLogout = () => {
+        logout();
         navigate('/login');
     };
+
+    // Construimos el nombre completo 
+    const nombreCompleto = user?.nombre 
+        ? `${user.nombre} ${user.apellidoPaterno || ''} ${user.apellidoMaterno || ''}`.trim() 
+        : "Usuario";
+
+    //Extraemos el rol 
+    const rolMostrar = user?.roles?.[0] 
+        ? user.roles[0].replace(/_/g, ' ') 
+        : "Sin Rol";
 
     // Navegaciones
     const menuItems = [
@@ -34,7 +46,7 @@ export default function TrabajadorLayout() {
             </div>
             <div>
                 <h1 className="font-bold text-sm sm:text-base leading-tight">Sistema JyPS</h1>
-                <p className="text-xs text-gray-300 capitalize">{user.rol}</p>
+                <p className="text-xs text-gray-300 capitalize">{rolMostrar.toLowerCase()}</p>
             </div>
             </div>
         </div>
@@ -68,12 +80,13 @@ export default function TrabajadorLayout() {
             <div className="flex items-center gap-3 px-3 sm:px-4 py-3 mb-2 rounded-xl bg-white/5 border border-white/10">
             <div className="w-8 h-8 rounded-full bg-[#D4AF37]/20 flex items-center justify-center flex-shrink-0 border border-[#D4AF37]/30">
                 <span className="text-[#D4AF37] font-bold text-sm">
-                {user.nombre.charAt(0)}
+                {/* 6. Extraemos la primera letra del nombre real para el avatar */}
+                {nombreCompleto.charAt(0)}
                 </span>
             </div>
             <div className="flex-1 min-w-0">
-                <p className="text-xs sm:text-sm font-medium text-white truncate">{user.nombre}</p>
-                <p className="text-[10px] sm:text-xs text-gray-400 truncate capitalize">{user.rol}</p>
+                <p className="text-xs sm:text-sm font-medium text-white truncate">{nombreCompleto}</p>
+                <p className="text-[10px] sm:text-xs text-gray-400 truncate capitalize">{rolMostrar.toLowerCase()}</p>
             </div>
             </div>
             <button
@@ -93,7 +106,10 @@ export default function TrabajadorLayout() {
         <header className="lg:hidden bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between sticky top-0 z-30 shadow-sm">
             <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-[#D4AF37] rounded-lg flex items-center justify-center flex-shrink-0">
-                <span className="text-[#0F2C59] font-bold text-sm">J</span>
+                <span className="text-[#0F2C59] font-bold text-sm">
+                    {/* Usamos la misma inicial para el avatar móvil */}
+                    {nombreCompleto.charAt(0)}
+                </span>
             </div>
             <span className="font-semibold text-[#0F2C59] text-base truncate">Sistema JyPS</span>
             </div>
@@ -125,7 +141,8 @@ export default function TrabajadorLayout() {
                 }`}>
                 <Icon size={22} className={isActive ? 'text-[#0F2C59]' : ''} />
                 </div>
-                <span className={`text-[px] font-medium text-center w-full truncate ${
+                {/* Nota: Quité el 'px' vacío que tenías en el text size para evitar warnings en consola */}
+                <span className={`text-[10px] font-medium text-center w-full truncate ${
                 isActive ? 'text-[#0F2C59] font-bold' : 'text-gray-500'
                 }`}>
                 {item.label}

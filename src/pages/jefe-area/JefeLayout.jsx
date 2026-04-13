@@ -7,40 +7,40 @@ import {
     X, 
     LayoutDashboard, 
     Users, 
-    User, 
+    User as UserIcon, // Renombrado para evitar conflicto con el objeto user
     GraduationCap 
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useAuth } from '../../context/AuthContext'; // Importamos el contexto
 
 export default function JefeLayout() {
     const navigate = useNavigate();
     const location = useLocation();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    
+    // Extraemos el usuario real y la función de cierre de sesión
+    const { user, cerrarSesion } = useAuth(); 
 
-    // Simulación de usuario (basado en la imagen de referencia)
-    const user = { 
-        nombre: "Roberto Sánchez López", 
-        email: "roberto.sanchez@utez.edu.mx",
-        rol: "Jefe de Área" 
-    };
+    // Formateamos el rol 
+    const rolFormateado = user?.roles?.[0]?.replace(/_/g, ' ') || "Jefe de Área";
+    // Extraemos el nombre 
+    const nombreUsuario = user?.nombre || user?.sub || "Usuario";
 
-    // Cerrar sidebar en móvil al cambiar de ruta
     useEffect(() => {
         setIsSidebarOpen(false);
     }, [location.pathname]);
 
-    // Cerrar sesión
     const handleLogout = () => {
+        cerrarSesion(); // Limpiamos el localStorage y el estado
         navigate('/login');
     };
 
-    // Rutas exclusivas del Jefe
     const navItems = [
         { path: '/jefe-area', icon: LayoutDashboard, label: 'Dashboard' },
         { path: '/jefe-area/trabajadores', icon: Users, label: 'Trabajadores' },
         { path: '/jefe-area/crear-solicitud', icon: FilePlus, label: 'Generar Solicitud' },
         { path: '/jefe-area/historial', icon: History, label: 'Historial' },
-        {path:'/jefe-area/perfil', icon: User, label: "Perfil"}
+        { path: '/jefe-area/perfil', icon: UserIcon, label: "Perfil"}
     ];
 
     return (
@@ -59,7 +59,6 @@ export default function JefeLayout() {
                 transition-transform duration-300 ease-in-out
                 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
             `}>
-                {/* Logo / Header Sidebar */}
                 <div className="p-4 sm:p-6 flex items-center justify-between border-b border-white/10">
                     <div className="flex items-center gap-3">
                         <div className="w-8 h-8 sm:w-10 sm:h-10 bg-[#D4AF37] rounded-lg flex items-center justify-center flex-shrink-0 shadow-lg">
@@ -67,7 +66,7 @@ export default function JefeLayout() {
                         </div>
                         <div>
                             <h1 className="font-bold text-sm sm:text-base leading-tight">Sistema JyPS</h1>
-                            <p className="text-xs text-gray-300">{user.rol}</p>
+                            <p className="text-xs text-gray-300 capitalize">{rolFormateado.toLowerCase()}</p>
                         </div>
                     </div>
                     <button 
@@ -78,7 +77,6 @@ export default function JefeLayout() {
                     </button>
                 </div>
 
-                {/* Navigation */}
                 <nav className="flex-1 py-4 sm:py-6 px-3 sm:px-4 space-y-1 sm:space-y-2 overflow-y-auto">
                     {navItems.map((item) => {
                         const Icon = item.icon;
@@ -102,17 +100,17 @@ export default function JefeLayout() {
                     })}
                 </nav>
 
-                {/* User / Logout */}
+                {/* Perfil y Cerrar Sesión */}
                 <div className="p-4 border-t border-white/10">
                     <div className="flex items-center gap-3 px-3 sm:px-4 py-3 mb-2 rounded-xl bg-white/5 border border-white/10">
                         <div className="w-8 h-8 rounded-full bg-[#D4AF37]/20 flex items-center justify-center flex-shrink-0 border border-[#D4AF37]/30">
                             <span className="text-[#D4AF37] font-bold text-sm">
-                                {user?.nombre?.charAt(0) || 'R'}
+                                {nombreUsuario.charAt(0).toUpperCase()}
                             </span>
                         </div>
                         <div className="flex-1 min-w-0">
-                            <p className="text-xs sm:text-sm font-medium text-white truncate">{user?.nombre}</p>
-                            <p className="text-[10px] sm:text-xs text-gray-400 truncate">{user?.rol}</p>
+                            <p className="text-xs sm:text-sm font-medium text-white truncate">{nombreUsuario}</p>
+                            <p className="text-[10px] sm:text-xs text-gray-400 truncate capitalize">{rolFormateado.toLowerCase()}</p>
                         </div>
                     </div>
                     <button
@@ -127,7 +125,6 @@ export default function JefeLayout() {
 
             {/* Main Content */}
             <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
-                {/* Top Bar para móvil */}
                 <header className="lg:hidden bg-white border-b border-gray-200 px-3 sm:px-4 py-2 flex items-center gap-2 sticky top-0 z-30">
                     <button
                         onClick={() => setIsSidebarOpen(true)}
@@ -143,7 +140,6 @@ export default function JefeLayout() {
                     </div>
                 </header>
 
-                {/* (Outlet) */}
                 <main className="flex-1 overflow-y-auto bg-[#F8F9FA] p-4 sm:p-6 lg:p-8 relative">
                     <Outlet />
                 </main>

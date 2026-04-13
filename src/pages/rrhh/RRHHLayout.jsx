@@ -1,33 +1,41 @@
-import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
-import { LogOut, Menu, X, FilePlus, History, User, FileText, ClipboardList, Send, GraduationCap } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
+import { 
+    LogOut, Menu, X, FilePlus, History, User, 
+    FileText, ClipboardList, GraduationCap 
+} from 'lucide-react';
+import { useAuth } from '../../context/AuthContext'; // Importamos el contexto
 
 export default function RRHHLayout() {
     const navigate = useNavigate();
     const location = useLocation();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    
+    // Extraemos el usuario y la función logout del contexto real
+    const { user, cerrarSesion } = useAuth();
 
-    // Simulacion de usuario
-    const user = { nombre: "Admin RH", rol: "recursos humanos" };
-
-    // Cerrar sidebar a movil
+    // Cerrar sidebar al cambiar de ruta en móviles
     useEffect(() => {
         setIsSidebarOpen(false);
     }, [location.pathname]);
 
-    //cerrar sesion
     const handleLogout = () => {
+        cerrarSesion(); // Limpiamos el localStorage y el estado
         navigate('/login');
     };
 
-    // Rutas exclusivas
+    // Rutas exclusivas del Auditor / RH
     const navItems = [
         { path: '/recursos-humanos', icon: FileText, label: 'Justificantes' },
         { path: '/recursos-humanos/pases-rh', icon: ClipboardList, label: 'Pases de Salida' },
         { path: '/recursos-humanos/crear-solicitud', icon: FilePlus, label: 'Generar Solicitud' },
         { path: '/recursos-humanos/historial', icon: History, label: 'Historial' },
-        {path:'/recursos-humanos/perfil', icon: User, label: "Perfil"}
+        { path: '/recursos-humanos/perfil', icon: User, label: "Perfil" }
     ];
+
+    const nombreCompleto = user?.nombre 
+        ? `${user.nombre} ${user.apellidoPaterno || ''}`.trim() 
+        : "Usuario";
 
     return (
         <div className="min-h-screen bg-[#F8F9FA] flex">
@@ -53,8 +61,7 @@ export default function RRHHLayout() {
                         </div>
                         <div>
                             <h1 className="font-bold text-sm sm:text-base leading-tight">Sistema JyPS</h1>
-                            {/* Cambiamos el subtitulo aquí */}
-                            <p className="text-xs text-gray-300">Recursos Humanos</p>
+                            <p className="text-xs text-gray-300">Auditor</p>
                         </div>
                     </div>
                     <button 
@@ -92,13 +99,17 @@ export default function RRHHLayout() {
                 <div className="p-4 border-t border-white/10">
                     <div className="flex items-center gap-3 px-3 sm:px-4 py-3 mb-2 rounded-xl bg-white/5 border border-white/10">
                         <div className="w-8 h-8 rounded-full bg-[#D4AF37]/20 flex items-center justify-center flex-shrink-0 border border-[#D4AF37]/30">
-                            <span className="text-[#D4AF37] font-bold text-sm">
-                                {user?.nombre?.charAt(0) || 'R'}
+                            <span className="text-[#D4AF37] font-bold text-sm uppercase">
+                                {user?.nombre?.charAt(0) || 'A'}
                             </span>
                         </div>
                         <div className="flex-1 min-w-0">
-                            <p className="text-xs sm:text-sm font-medium text-white truncate">{user?.nombre}</p>
-                            <p className="text-[10px] sm:text-xs text-gray-400 truncate">{user?.rol}</p>
+                            <p className="text-xs sm:text-sm font-medium text-white truncate">
+                                {nombreCompleto|| 'Administrador'}
+                            </p>
+                            <p className="text-[10px] sm:text-xs text-gray-400 truncate uppercase">
+                                {user?.roles}
+                            </p>
                         </div>
                     </div>
                     <button
@@ -129,7 +140,6 @@ export default function RRHHLayout() {
                     </div>
                 </header>
 
-                {/* (Outlet) */}
                 <main className="flex-1 overflow-y-auto bg-[#F8F9FA] p-4 sm:p-6 lg:p-8 relative">
                     <Outlet />
                 </main>

@@ -1,176 +1,148 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; 
-import { ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { ArrowLeft, Upload, Loader2, FileText, X } from 'lucide-react';
 import { Card } from '../../components/Card';
 import { Input } from '../../components/Input';
 import { Button } from '../../components/Button';
+import { useIncidencias } from '../../hooks/useIncidencias';
+import { useAuth } from '../../context/AuthContext';
+import { toast } from 'sonner';
 
 export default function SolicitarPase() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { crearPaseSalida, isSavingPase } = useIncidencias();
 
-  // Usuario simulado
-  const user = { 
-    nombre: "Juan Pérez García", 
-    email: "juan.perez@utez.edu.mx" 
-  };
-  
+  // --- Estados de Formulario ---
   const [formData, setFormData] = useState({
-    fecha: new Date().toISOString().split('T')[0],
-    horaSalida: '',
-    detalles: ''
-  });
+  fecha: new Date().toLocaleDateString('en-CA'), 
+  horaSalida: '',
+  detalles: ''
+});
   const [detallesError, setDetallesError] = useState('');
+  const [archivos, setArchivos] = useState([]);
 
+  // --- Estado para bloquear el botón ---
+  const [isSubmitting, setIsSubmitting] = useState(false); 
+
+  // --- Handlers de Eventos ---
   const handleDetallesChange = (e) => {
-    const value = e.target.value;
-    setFormData({ ...formData, detalles: value });
+    const val = e.target.value;
+    setFormData({ ...formData, detalles: val });
     
-    // Validar longitud
-    if (value.length > 0 && value.length < 25) {
-      setDetallesError('Debe tener al menos 25 caracteres');
-    } else if (value.length > 255) {
-      setDetallesError('No puede exceder 255 caracteres');
-    } else {
-      setDetallesError('');
-    }
+    if (val.length > 0 && val.length < 25) setDetallesError('Mínimo 25 caracteres');
+    else if (val.length > 255) setDetallesError('Máximo 255 caracteres');
+    else setDetallesError('');
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    
-    // Validar antes de enviar
-    if (formData.detalles.length < 25) {
-      setDetallesError('Debe tener al menos 25 caracteres');
-      alert('Los detalles del pase deben tener al menos 25 caracteres');
-      return;
-    }
-    
-    if (formData.detalles.length > 255) {
-      setDetallesError('No puede exceder 255 caracteres');
-      alert('Los detalles del pase no pueden exceder 255 caracteres');
-      return;
-    }
-    
-    // QR simulado
-    const codigoQR = Math.random().toString(36).substring(2, 10).toUpperCase();
-    
-    alert('¡Solicitud enviada correctamente!');
-    
-    //regresa automaticamente a la pantalla anterior en el historial
-    navigate(-1);
+  const handleFileChange = (e) => {
+    const selectedFiles = Array.from(e.target.files);
+    setArchivos(prev => [...prev, ...selectedFiles]);
   };
+
+  const eliminarArchivo = (index) => {
+    setArchivos(prev => prev.filter((_, i) => i !== index));
+  };
+
+const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (isSubmitting) return;
+
+    if (!user?.id || !user?.departamentoId) return toast.error('Sesión incompleta.');
+
+    setIsSubmitting(true);
+
+    try {
+        const hoyReal = new Date().toLocaleDateString('en-CA');
+        const fechaHoraISO = new Date(`${hoyReal}T${formData.horaSalida}:00`).toISOString();
+
+        // 1. OBJETO PLANO (Sin FormData aquí)
+        const objetoPase = {
+            empleadoId: Number(user.id), // Aseguramos que sea número
+            nombreCompleto: `${user.nombre} ${user.apellidoPaterno || ''}`.trim(),
+            jefeId: Number(user.departamentoId), // Usamos el ID del departamento como jefeId
+            horaSolicitada: fechaHoraISO,
+            fechaSolicitud: hoyReal,
+            descripcion: formData.detalles,
+            estado: "PENDIENTE",
+            comentario: "",
+            QR: ""
+        };
+
+        // 2. Enviamos el objeto y los archivos por separado al hook
+        const resultado = await crearPaseSalida(objetoPase, archivos);
+
+        if (resultado.exito) {
+            toast.success('Pase solicitado correctamente');
+            navigate(-1);
+        } else {
+            toast.error(resultado.mensaje || 'Error al procesar');
+            setIsSubmitting(false);
+        }
+    } catch (error) {
+        toast.error('Error de conexión');
+        setIsSubmitting(false);
+    }
+};
 
   return (
-    <div className="pb-6 sm:pb-8 max-w-3xl mx-auto animate-fade-in">
+    <div className="pb-8 max-w-3xl mx-auto animate-fade-in px-4">
       {/* Header */}
-      <div className="flex items-center gap-3 mb-4 sm:mb-6">
-        <button 
-          onClick={() => navigate(-1)}
-          className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
-        >
-          <ArrowLeft size={20} className="text-[#0F2C59] sm:w-6 sm:h-6" />
+      <div className="flex items-center gap-3 mb-6">
+        <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+          <ArrowLeft size={20} className="text-[#0F2C59]" />
         </button>
-        <h1 className="text-xl sm:text-2xl font-bold text-[#0F2C59] break-words">Solicitar Pase de Salida</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-[#0F2C59]">Solicitar Pase de Salida</h1>
       </div>
 
-      {/* Form */}
-      <Card className="p-4 sm:p-6 md:p-8 border-t-4 border-t-[#0F2C59]">
-        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
-          {/* Informacion del Trabajador */}
+      <Card className="p-4 sm:p-8 border-t-4 border-t-[#0F2C59]">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Datos del Usuario */}
           <div className="grid sm:grid-cols-2 gap-4">
-            <Input
-              label="Nombre Completo"
-              value={user.nombre}
-              disabled
-              className="bg-gray-50 text-gray-500"
-            />
-            <Input
-              label="Correo Institucional"
-              value={user.email}
-              disabled
-              className="bg-gray-50 text-gray-500"
-            />
+            <Input label="Nombre Completo" value={`${user?.nombre} ${user?.apellidoPaterno || ''} ${user.apellidoMaterno || ''}`} disabled className="bg-gray-50" />
+            <Input label="Departamento" value={user?.nombreDepartamento || ''} disabled className="bg-gray-50" />
           </div>
 
-          {/* Fecha y Hora */}
+          {/* Tiempo */}
           <div className="grid sm:grid-cols-2 gap-4">
-            <Input
-              type="date"
-              label="Fecha de Salida"
-              value={formData.fecha}
-              onChange={(e) => setFormData({ ...formData, fecha: e.target.value })}
-              required
-              disabled
-              className="bg-gray-50 text-gray-500"
-            />
-            <Input
-              type="time"
-              label="Hora de Salida"
-              value={formData.horaSalida}
-              onChange={(e) => setFormData({ ...formData, horaSalida: e.target.value })}
-              required
-            />
+            <Input type="date" label="Fecha" value={formData.fecha} disabled className="bg-gray-50" />
+            <Input type="time" label="Hora de Salida" value={formData.horaSalida} onChange={(e) => setFormData({...formData, horaSalida: e.target.value})} required />
           </div>
 
-          {/* Detalles */}
+          {/* Motivo */}
           <div>
-            <label className="block mb-2 font-medium text-gray-700 text-sm sm:text-base">
-              Detalles del Pase <span className="text-red-500">*</span>
-            </label>
+            <label className="block mb-2 font-medium text-gray-700 text-sm">Detalles del Pase *</label>
             <textarea
-              className={`w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border rounded-lg focus:ring-2 outline-none transition-colors resize-none ${
-                detallesError 
-                  ? 'border-red-500 focus:border-red-500 focus:ring-red-100' 
-                  : 'border-gray-300 focus:border-[#0F2C59] focus:ring-blue-100'
-              }`}
-              rows={4}
-              placeholder="Describe el motivo de tu salida, destino y cualquier información relevante..."
+              className={`w-full p-3 text-sm border rounded-lg focus:ring-2 outline-none transition-colors resize-none ${detallesError ? 'border-red-500' : 'border-gray-300'}`}
+              rows={3}
+              placeholder="Motivo y destino..."
               value={formData.detalles}
               onChange={handleDetallesChange}
               required
-              maxLength={255}
             />
-            <div className="flex justify-between items-start mt-1">
-              <p className="text-xs text-gray-500">
-                Incluye el motivo, destino y hora estimada de regreso
-              </p>
-              <p className={`text-xs font-medium ${
-                formData.detalles.length < 25 
-                  ? 'text-red-500' 
-                  : formData.detalles.length > 200 
-                    ? 'text-yellow-600' 
-                    : 'text-gray-500'
-              }`}>
-                {formData.detalles.length}/255
-              </p>
+            <div className="flex justify-between mt-1">
+              <p className="text-xs text-gray-400">Incluye motivo y hora estimada de regreso</p>
+              <p className={`text-xs font-medium ${formData.detalles.length < 25 ? 'text-red-500' : 'text-gray-500'}`}>{formData.detalles.length}/255</p>
             </div>
-            {detallesError && <p className="mt-1 text-sm text-red-500">{detallesError}</p>}
           </div>
 
-          {/* Action Buttons */}
+          
+
+          {/* Botones */}
           <div className="flex flex-col sm:flex-row gap-3 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              fullWidth
-              onClick={() => navigate(-1)}
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              fullWidth
-            >
-              Enviar Solicitud
+            <Button type="button" variant="outline" fullWidth onClick={() => navigate(-1)} disabled={isSubmitting}>Cancelar</Button>
+            <Button type="submit" fullWidth disabled={isSubmitting || isSavingPase || !user?.departamentoId}>
+              {isSubmitting || isSavingPase ? (
+                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Procesando...</>
+              ) : 'Enviar Solicitud'}
             </Button>
           </div>
         </form>
       </Card>
 
-      {/* Info */}
-      <div className="mt-4 p-4 bg-blue-50 border border-blue-100 rounded-lg flex items-start gap-3">
-          <p className="text-sm text-blue-800">
-          <strong>Nota:</strong> Tu solicitud será enviada para aprobación. Recibirás una notificación una vez que sea aprobada por tu administrador.
+      <div className="mt-4 p-4 bg-blue-50 border border-blue-100 rounded-lg">
+        <p className="text-xs text-blue-800">
+          <strong>Nota:</strong> Tu solicitud será enviada al jefe de tu departamento ({user?.nombreDepartamento || 'asignado'}) para su aprobación.
         </p>
       </div>
     </div>

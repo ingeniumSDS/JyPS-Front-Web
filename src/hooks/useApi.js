@@ -12,21 +12,29 @@ export const useApi = () => {
         setError(null);
 
         try {
+            //  Detectar archivo/FormData
+            const isFormData = body instanceof FormData;
+
             const headers = {
-                'Content-Type': 'application/json',
                 'ngrok-skip-browser-warning': 'true'
             };
 
-            // guardamos token
-            const token = localStorage.getItem('token');
+            // archivo/FormData
+            if (!isFormData) {
+                headers['Content-Type'] = 'application/json';
+            }
+
+            // Guardamos token
+            const token = localStorage.getItem('usuario');
             if (token) {
                 headers['Authorization'] = `Bearer ${token}`;
             }
 
             const config = { method, headers };
 
+            // Preparacion del cuerpo
             if (body) {
-                config.body = JSON.stringify(body);
+                config.body = isFormData ? body : JSON.stringify(body);
             }
 
             const response = await fetch(`${BASE_URL}${endpoint}`, config);
