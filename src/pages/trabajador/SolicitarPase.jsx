@@ -99,7 +99,7 @@ const handleSubmit = async (e) => {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Datos del Usuario */}
           <div className="grid sm:grid-cols-2 gap-4">
-            <Input label="Nombre Completo" value={user?.nombre || ''} disabled className="bg-gray-50" />
+            <Input label="Nombre Completo" value={`${user?.nombre} ${user?.apellidoPaterno || ''} ${user.apellidoMaterno || ''}`} disabled className="bg-gray-50" />
             <Input label="Departamento" value={user?.nombreDepartamento || ''} disabled className="bg-gray-50" />
           </div>
 
