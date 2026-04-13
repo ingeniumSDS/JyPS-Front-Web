@@ -100,6 +100,7 @@ export default function SolicitarJustificante() {
         }
     };
 
+
     return (
         <div className="pb-8 max-w-3xl mx-auto animate-fade-in px-4">
             <div className="flex items-center gap-3 mb-6">
@@ -117,7 +118,7 @@ export default function SolicitarJustificante() {
             <Card className="p-4 sm:p-8 border-t-4 border-t-[#28A745]">
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="grid sm:grid-cols-2 gap-4">
-                        <Input label="Nombre Completo" value={`${user?.nombre} ${user?.apellidoPaterno || ''}`} disabled className="bg-gray-50" />
+                        <Input label="Nombre Completo" value={`${user?.nombre} ${user?.apellidoPaterno || ''} ${user.apellidoMaterno || ''}`} disabled className="bg-gray-50" />
                         <Input label="Departamento" value={user?.nombreDepartamento || 'Sin asignar'} disabled className="bg-gray-50" />
                     </div>
 
