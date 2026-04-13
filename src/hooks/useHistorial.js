@@ -83,7 +83,29 @@ export const useHistorial = () => {
         }
     };
 
+
+    const obtenerPasesEmpleado = async (empleadoId) => {
+        setCargando(true); 
+        try {
+            
+            const endpoint = `/pases/empleado?empleadoId=${empleadoId}`;
+            
+            const respuesta = await request(endpoint, 'GET');
+            
+            const data = Array.isArray(respuesta) ? respuesta : (respuesta?.data || []);
+            
+            return { exito: true, data };
+            
+        } catch (error) {
+            console.error("Error al obtener pases:", error);
+            return { exito: false, data: [] };
+        } finally {
+            setCargando(false); // Detenemos la carga ocurra lo que ocurra
+        }
+    };
+
     return {
+        obtenerPasesEmpleado,
         cargando,
         obtenerJustificantesEmpleado,
         obtenerDetallesJustificante,
