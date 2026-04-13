@@ -9,7 +9,7 @@ export const useIncidencias = () => {
         try {
             const formData = new FormData();
 
-            // ID null si es nuevo
+            
             const { id, ...datosSinId } = datosPase;
 
             // 'data' y JSON
@@ -122,7 +122,7 @@ export const useIncidencias = () => {
         solicitarJustificante,
         obtenerIncidenciasParaJefe,
         revisarIncidencia,
-        isLoadingIncidencias: isLoading, // Simplificado para usar el estado del useApi
+        isLoadingIncidencias: isLoading, 
         errorIncidencias: error
     };
 };
