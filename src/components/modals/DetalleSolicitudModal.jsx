@@ -1,50 +1,56 @@
 import React, { useEffect, useState } from 'react';
-import { X, User, Calendar, Paperclip, Check, X as XIcon, Loader2, Mail } from 'lucide-react';
+import { X, User, Calendar, Paperclip, Check, X as XIcon, Loader2, Download } from 'lucide-react';
 import { useIncidencias } from '../../hooks/useIncidencias';
 import { toast } from 'sonner';
 
 const DetalleSolicitudModal = ({ isOpen, onClose, solicitud, onActualizacion }) => {
-  const { obtenerDetalleIncidencia, revisarIncidencia } = useIncidencias();
+  const { obtenerDetalleIncidencia, revisarIncidencia, descargarArchivoJustificante } = useIncidencias();
   
   const [detalle, setDetalle] = useState(null);
   const [cargando, setCargando] = useState(false);
   const [enviando, setEnviando] = useState(false);
 
-    useEffect(() => {
-      const cargarInfoCompleta = async () => {
-        if (isOpen && solicitud?.id) {
-          setCargando(true);
-          try {
-            const data = await obtenerDetalleIncidencia(solicitud.id, solicitud.tipo);
-            setDetalle(data);
-          } catch (error) {
-            toast.error("No se pudo obtener la información detallada.");
-          } finally {
-            setCargando(false);
-          }
-        }
-      };
+  const [mostrandoRechazo, setMostrandoRechazo] = useState(false);
+  const [motivoRechazo, setMotivoRechazo] = useState("");
 
-      cargarInfoCompleta();
-      if (!isOpen) setDetalle(null);
-      
-    }, [isOpen, solicitud]);
+  useEffect(() => {
+    const cargarInfoCompleta = async () => {
+      if (isOpen && solicitud?.id) {
+        setCargando(true);
+        try {
+          const data = await obtenerDetalleIncidencia(solicitud.id, solicitud.tipo);
+          setDetalle(data);
+        } catch (error) {
+          toast.error("No se pudo obtener la información detallada.");
+        } finally {
+          setCargando(false);
+        }
+      }
+    };
+
+    cargarInfoCompleta();
+    
+    if (!isOpen) {
+      setDetalle(null);
+      setMostrandoRechazo(false);
+      setMotivoRechazo("");
+    }
+  }, [isOpen, solicitud]);
 
   if (!isOpen || !solicitud) return null;
 
   const info = detalle || solicitud;
-  // Normalizamos
-  const tipoNormalizado = solicitud.tipo?.toLowerCase();
   const esJustificante = solicitud?.tipo?.toLowerCase().includes('justificante');
   const esPendiente = solicitud.estado?.toUpperCase() === 'PENDIENTE';
 
-    const handleAccion = async (nuevoEstado) => {
+  const handleAccion = async (nuevoEstado) => {
       let motivo = "";
       
       if (nuevoEstado === 'RECHAZADO') {
-          motivo = prompt("Ingrese el motivo del rechazo:");
-          if (motivo === null) return;
-          if (motivo.trim() === "") return toast.error("Debe indicar un motivo para rechazar");
+          if (motivoRechazo.trim().length < 25) {
+              return toast.error("El motivo de rechazo debe tener al menos 25 caracteres.");
+          }
+          motivo = motivoRechazo;
       } else {
           motivo = "Aprobado por el jefe";
       }
@@ -66,6 +72,17 @@ const DetalleSolicitudModal = ({ isOpen, onClose, solicitud, onActualizacion }) 
       } finally {
           setEnviando(false);
       }
+  };
+
+  // Funcion descarga 
+  const handleDescargarArchivo = async (archivoUrl) => {
+    if (!archivoUrl) return;
+    try {
+      await descargarArchivoJustificante(archivoUrl);
+      toast.success("Descarga completada");
+    } catch (error) {
+      toast.error("Error al intentar descargar el archivo.");
+    }
   };
 
   return (
@@ -97,7 +114,6 @@ const DetalleSolicitudModal = ({ isOpen, onClose, solicitud, onActualizacion }) 
             </span>
           </div>
 
-          {/* Información del Trabajador */}
           <div className="bg-slate-50 rounded-lg p-4 mb-4 border border-slate-100">
             <div className="flex items-center gap-2 mb-3 text-slate-700 font-semibold">
               <User size={18} />
@@ -105,14 +121,12 @@ const DetalleSolicitudModal = ({ isOpen, onClose, solicitud, onActualizacion }) 
             </div>
             <div className="text-sm text-slate-600 space-y-1 ml-6">
               <p><span className="font-bold text-slate-800">Nombre:</span> {info.nombreCompleto || info.nombre || '...'}</p>
-              {/* Añadimos email si el detalle lo trae */}
               {info.email && (
                 <p><span className="font-bold text-slate-800">Email:</span> {info.email}</p>
               )}
             </div>
           </div>
 
-          {/* Detalles de la Solicitud */}
           <div className="bg-slate-50 rounded-lg p-4 mb-4 border border-slate-100">
             <div className="flex items-center gap-2 mb-3 text-slate-700 font-semibold">
               <Calendar size={18} />
@@ -134,19 +148,38 @@ const DetalleSolicitudModal = ({ isOpen, onClose, solicitud, onActualizacion }) 
             </div>
           </div>
 
-          {/* Evidencias (image_503485.png muestra que 'archivos' es un array) */}
           {esJustificante && info.archivos && info.archivos.length > 0 && (
             <div className="bg-blue-50 rounded-lg p-4 mb-4 border border-blue-100">
-               <div className="flex items-center gap-2 mb-2 text-blue-800 font-semibold">
+                <div className="flex items-center gap-2 mb-2 text-blue-800 font-semibold">
                 <Paperclip size={18} />
                 <h4>Evidencia Adjunta</h4>
               </div>
-              <div className="ml-6 space-y-1">
-                {info.archivos.map((archivo, idx) => (
-                  <a key={idx} href={archivo} target="_blank" rel="noreferrer" className="text-sm text-blue-600 hover:underline block truncate">
-                    {archivo.split('/').pop() || `Documento ${idx + 1}`}
-                  </a>
-                ))}
+              <div className="ml-6 space-y-2">
+                {solicitud.archivos && solicitud.archivos.length > 0 && (
+                  <div className="mb-4 border-t border-gray-100 pt-3">
+                      <div className="flex flex-wrap gap-2">
+                          {solicitud.archivos.map((archivo, idx) => {
+                const refArchivo = typeof archivo === 'string' 
+                    ? archivo 
+                    : (archivo.urlDescarga || archivo.nombreOriginal);
+
+                const nombreMostrar = refArchivo ? refArchivo.split('/').pop() : 'Archivo adjunto';
+
+                return (
+                    <button
+                        key={idx}
+                        type="button"
+                        onClick={() => handleDescargarArchivo(refArchivo)} // Corrección 2: Evento onClick activo
+                        className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-md border bg-gray-50 text-blue-700 border-gray-200 hover:bg-blue-50 transition-colors"
+                    >
+                        <Download size={14} />
+                        <span className="truncate max-w-[150px]">{nombreMostrar}</span>
+                    </button>
+                );
+            })}
+        </div>
+    </div>
+)}
               </div>
             </div>
           )}
@@ -154,24 +187,61 @@ const DetalleSolicitudModal = ({ isOpen, onClose, solicitud, onActualizacion }) 
 
         <div className="p-5 border-t border-gray-100 bg-gray-50">
           {esPendiente ? (
-            <div className="grid grid-cols-2 gap-3">
-              <button 
-                disabled={enviando || cargando}
-                onClick={() => handleAccion('APROBADO')}
-                className="flex items-center justify-center gap-2 py-2.5 px-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg transition-all disabled:opacity-50"
-              >
-                {enviando ? <Loader2 className="animate-spin" size={18} /> : <Check size={18} />}
-                Aprobar
-              </button>
-              <button 
-                disabled={enviando || cargando}
-                onClick={() => handleAccion('RECHAZADO')}
-                className="flex items-center justify-center gap-2 py-2.5 px-4 bg-white border-2 border-red-500 text-red-500 hover:bg-red-50 font-bold rounded-lg transition-all disabled:opacity-50"
-              >
-                <XIcon size={18} />
-                Rechazar
-              </button>
-            </div>
+            mostrandoRechazo ? (
+              <div className="flex flex-col gap-3 w-full animate-in fade-in slide-in-from-bottom-4">
+                <textarea
+                  autoFocus
+                  value={motivoRechazo}
+                  onChange={(e) => setMotivoRechazo(e.target.value)}
+                  placeholder="Escribe el motivo del rechazo detallado (mínimo 25 caracteres)..."
+                  className="w-full p-3 text-sm border border-black  rounded-lg focus:ring-2  focus:outline-none resize-none"
+                  rows="3"
+                />
+                {/* Corrección 1: Clases dinámicas dependiendo de la longitud del texto */}
+                <div className={`flex justify-between items-center text-xs px-1 transition-colors duration-200 ${motivoRechazo.trim().length >= 25 ? 'text-green-600 font-bold' : 'text-gray-500'}`}>
+                  <span>{motivoRechazo.length} / 25 caracteres mínimos</span>
+                </div>
+                <div className="flex gap-2 justify-end mt-2">
+                  <button 
+                    disabled={enviando}
+                    onClick={() => {
+                        setMostrandoRechazo(false);
+                        setMotivoRechazo("");
+                    }}
+                    className="px-4 py-2 text-gray-600 font-semibold hover:bg-gray-200 rounded-lg transition-all"
+                  >
+                    Cancelar
+                  </button>
+                  <button 
+                    disabled={enviando || motivoRechazo.trim().length < 25}
+                    onClick={() => handleAccion('RECHAZADO')}
+                    className="flex items-center justify-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {enviando ? <Loader2 className="animate-spin" size={18} /> : <XIcon size={18} />}
+                    Confirmar Rechazo
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                <button 
+                  disabled={enviando || cargando}
+                  onClick={() => handleAccion('APROBADO')}
+                  className="flex items-center justify-center gap-2 py-2.5 px-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg transition-all disabled:opacity-50"
+                >
+                  {enviando ? <Loader2 className="animate-spin" size={18} /> : <Check size={18} />}
+                  Aprobar
+                </button>
+                <button 
+                  disabled={enviando || cargando}
+                  onClick={() => setMostrandoRechazo(true)}
+                  className="flex items-center justify-center gap-2 py-2.5 px-4 bg-white border-2 border-red-500 text-red-500 hover:bg-red-50 font-bold rounded-lg transition-all disabled:opacity-50"
+                >
+                  <XIcon size={18} />
+                  Rechazar
+                </button>
+              </div>
+            )
           ) : (
             <button 
               onClick={onClose}
