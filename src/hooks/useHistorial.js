@@ -42,8 +42,9 @@ export const useHistorial = () => {
     //Descarga y abre un archivo adjunto en una nueva pestaña.
     const descargarArchivoJustificante = async (empleadoId, nombreArchivoGuardado) => {
         try {
-            const baseUrl = import.meta.env.VITE_API_BASE_URL; 
-            const url = `${baseUrl}/justificantes/${empleadoId}/${nombreArchivoGuardado}`;
+            const baseUrl = (import.meta.env.VITE_API_BASE_URL || '/api/v1').replace(/\/$/, '');
+            const archivoCodificado = encodeURIComponent(nombreArchivoGuardado);
+            const url = `${baseUrl}/justificantes/${empleadoId}/${archivoCodificado}`;
             
             // Verificacion del token
             const token = localStorage.getItem('usuario'); 
