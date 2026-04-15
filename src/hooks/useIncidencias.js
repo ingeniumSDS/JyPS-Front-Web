@@ -1,5 +1,6 @@
 import { useApi } from '../hooks/useApi';
 import { useState, useCallback } from 'react';
+import { toast } from 'sonner';
 
 export const useIncidencias = () => {
     const { request, isLoading, error } = useApi();
@@ -26,7 +27,7 @@ export const useIncidencias = () => {
             const resultado = await request('/pases', 'POST', formData);
             return { exito: true, data: resultado };
         } catch (error) {
-            console.error("Error en crearPaseSalida:", error);
+            toast.error(`Error al crear el pase de salida: ${error.message}`);
             return { exito: false, mensaje: error.message };
         }
     };
@@ -50,7 +51,7 @@ export const useIncidencias = () => {
             const response = await request('/justificantes', 'POST', formData);
             return { exito: true, data: response };
         } catch (err) {
-            console.error("Error en solicitarJustificante:", err);
+            toast.error(`Error al solicitar el justificante: ${err.message}`);
             return { exito: false, mensaje: err.message };
         }
     };
@@ -77,7 +78,7 @@ export const useIncidencias = () => {
 
             return [...normalizar(justificantes, 'Justificante'), ...normalizar(pases, 'Pase')];
         } catch (err) {
-            console.error("Error en obtenerIncidenciasParaJefe:", err);
+            toast.error(`Error al obtener las incidencias: ${err.message}`);
             throw err;
         }
     }, [request]);
@@ -91,7 +92,7 @@ export const useIncidencias = () => {
             const res = await request(endpoint, 'GET');
             return res; 
         } catch (error) {
-            console.error("Error al obtener detalles:", error);
+            toast.error(`Error al obtener detalles: ${error.message}`);
             throw error;
         }
     };
@@ -111,8 +112,44 @@ export const useIncidencias = () => {
             const res = await request(url, 'PUT', body);
             return res;
         } catch (error) {
-            console.error("Error al revisar incidencia:", error);
+            toast.error(`Error al revisar incidencia: ${error.message}`);
             throw error;
+        }
+    };
+
+    // Descarga y abre un archivo adjunto usando la URL completa
+    const descargarArchivoJustificante = async (urlArchivo) => {
+        try {
+            // construimos la URL
+            const url = urlArchivo; 
+            
+            const token = localStorage.getItem('usuario'); 
+            if (!token) {
+                toast.error("Tu sesión ha expirado. Vuelve a iniciar sesión.");
+                return;
+            }
+
+            const respuesta = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!respuesta.ok) {
+                throw new Error(`Error HTTP del servidor: ${respuesta.status}`);
+            }
+
+            const blob = await respuesta.blob();
+            const urlTemporal = URL.createObjectURL(blob);
+            window.open(urlTemporal, '_blank');
+
+            setTimeout(() => {
+                URL.revokeObjectURL(urlTemporal);
+            }, 10000);
+
+        } catch (error) {
+            toast.error(`Hubo un error al intentar abrir el archivo: ${error.message}`);
         }
     };
 
@@ -122,6 +159,7 @@ export const useIncidencias = () => {
         solicitarJustificante,
         obtenerIncidenciasParaJefe,
         revisarIncidencia,
+        descargarArchivoJustificante,
         isLoadingIncidencias: isLoading, 
         errorIncidencias: error
     };
