@@ -4,6 +4,25 @@ import { useApi } from "./useApi";
 export const useGestion = () => {
     const { request, isLoading } = useApi();
 
+    const normalizarHoraParaApi = (valor, horaPorDefecto = '00:00:00') => {
+        if (!valor) return horaPorDefecto;
+
+        const valorLimpio = String(valor).trim();
+        const partes = valorLimpio.split(':');
+
+        if (partes.length === 2) {
+            const [hh, mm] = partes;
+            return `${hh}:${mm}:00`;
+        }
+
+        if (partes.length === 3) {
+            const [hh, mm, ss] = partes;
+            return `${hh}:${mm}:${ss}`;
+        }
+
+        return horaPorDefecto;
+    };
+
     // --- MÉTODOS DE ESCRITURA (POST / PUT) ---
 
     // CREAR USUARIO / POST
@@ -15,8 +34,8 @@ export const useGestion = () => {
                 apellidoMaterno: formData.apellidoMaterno.trim(),
                 correo: formData.correo.trim(),
                 telefono: formData.telefono,
-                horaEntrada: `${formData.horaEntrada}:00`,
-                horaSalida: `${formData.horaSalida}:00`,
+                horaEntrada: normalizarHoraParaApi(formData.horaEntrada, '08:00:00'),
+                horaSalida: normalizarHoraParaApi(formData.horaSalida, '16:00:00'),
                 roles: Array.isArray(formData.roles) ? formData.roles : [formData.roles],
                 departamentoId: Number(formData.departamentoId) 
             };
@@ -39,8 +58,8 @@ export const useGestion = () => {
                 apellidoMaterno: formData.apellidoMaterno.trim(),
                 correo: formData.correo.trim(),
                 telefono: formData.telefono,
-                horaEntrada: `${formData.horaEntrada}:00`,
-                horaSalida: `${formData.horaSalida}:00`,
+                horaEntrada: normalizarHoraParaApi(formData.horaEntrada, '08:00:00'),
+                horaSalida: normalizarHoraParaApi(formData.horaSalida, '16:00:00'),
                 roles: Array.isArray(formData.roles) ? formData.roles : [formData.roles],
                 departamentoId: formData.departamentoId ? Number(formData.departamentoId) : null
             };
@@ -100,8 +119,12 @@ export const useGestion = () => {
                 nombreCompleto: user.nombreCompleto,
                 email: user.correo,
                 rol: user.roles && user.roles.length > 0 ? user.roles[0].toLowerCase() : 'sin_rol',
+                rolesOriginales: Array.isArray(user.roles) ? user.roles : [],
                 departamento: user.departamento ? user.departamento.nombre : `Depto ${user.departamentoId}`,
+                departamentoId: user.departamentoId || user.departamento?.id || null,
                 telefono: user.telefono,
+                horaEntrada: user.horaEntrada || user.hora_entrada || null,
+                horaSalida: user.horaSalida || user.hora_salida || null,
                 isActive: user.activo !== undefined ? user.activo : true
             }));
 
