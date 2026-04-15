@@ -31,13 +31,13 @@ export default function JefeLayout() {
     }, [location.pathname]);
 
     const handleLogout = () => {
-        cerrarSesion(); // Limpiamos el localStorage y el estado
+        cerrarSesion(); 
         navigate('/login');
     };
 
     const navItems = [
         { path: '/jefe-area', icon: LayoutDashboard, label: 'Dashboard' },
-        { path: '/jefe-area/trabajadores', icon: Users, label: 'Trabajadores' },
+        //{ path: '/jefe-area/trabajadores', icon: Users, label: 'Trabajadores' },
         { path: '/jefe-area/crear-solicitud', icon: FilePlus, label: 'Generar Solicitud' },
         { path: '/jefe-area/historial', icon: History, label: 'Historial' },
         { path: '/jefe-area/perfil', icon: UserIcon, label: "Perfil"}

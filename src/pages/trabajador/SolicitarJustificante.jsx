@@ -10,19 +10,15 @@ import { toast } from 'sonner';
 
 // --- Helpers de Fechas ---
 const calcularFechaMinima = () => {
-    const hoy = new Date();
-    let diasHabilesContados = 0;
-    let fechaActual = new Date(hoy);
-    while (diasHabilesContados < 3) {
-        fechaActual.setDate(fechaActual.getDate() - 1);
-        if (fechaActual.getDay() !== 0 && fechaActual.getDay() !== 6) diasHabilesContados++;
-    }
-    return fechaActual.toISOString().split('T')[0];
+    const fechaActual = new Date();
+    fechaActual.setDate(fechaActual.getDate() - 3);
+    const offset = fechaActual.getTimezoneOffset() * 60000;
+    return new Date(fechaActual.getTime() - offset).toISOString().split('T')[0];
 };
 
 const calcularFechaMaxima = () => {
     const ayer = new Date();
-    ayer.setDate(ayer.getDate() - 1);
+    ayer.setDate(ayer.getDate());
     return ayer.toISOString().split('T')[0];
 };
 

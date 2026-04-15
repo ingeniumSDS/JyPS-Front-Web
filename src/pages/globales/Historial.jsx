@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext'; 
 import { useHistorial } from '../../hooks/useHistorial';
-
+import { toast } from 'sonner';
 import EditarSolicitudModal from '../../components/modals/EditarSolicitudModal';
 import QrModal from '../../components/modals/QrModal'; 
 import ConfirmModal from '../../components/modals/ConfirmModal'; 
@@ -25,6 +25,8 @@ export default function Historial() {
         obtenerJustificantesEmpleado, 
         obtenerPasesEmpleado,
         descargarArchivoJustificante, 
+        eliminarPase,         
+        eliminarJustificante, 
         cargando: cargandoApi 
     } = useHistorial();
 
@@ -149,12 +151,41 @@ export default function Historial() {
         );
     };
 
-    const handleEliminar = () => {
-        if (solicitudAEliminar.tipo === 'pase') {
-            setPasesApi(prev => prev.filter(s => s.id !== solicitudAEliminar.id));
-        } else {
-            setJustificantesApi(prev => prev.filter(s => s.id !== solicitudAEliminar.id));
+    const handleEliminar = async () => {
+        if (!solicitudAEliminar) return;
+
+        //VALIDACION ESTRICTA
+        if (solicitudAEliminar.estado !== 'pendiente') {
+            toast.error("Acción no permitida: Solo se pueden eliminar solicitudes en estado pendiente.");
+            setSolicitudAEliminar(null);
+            return;
         }
+
+        let respuesta;
+
+        // API por tipo
+        if (solicitudAEliminar.tipo === 'pase') {
+            respuesta = await eliminarPase(solicitudAEliminar.id);
+            //Exito, actualizamos
+            if (respuesta.exito) {
+                setPasesApi(prev => prev.filter(s => s.id !== solicitudAEliminar.id));
+                toast.success("Pase eliminado correctamente.");
+            }
+        } else {
+            respuesta = await eliminarJustificante(solicitudAEliminar.id);
+             //Exito, actualizamos
+            if (respuesta.exito) {
+                setJustificantesApi(prev => prev.filter(s => s.id !== solicitudAEliminar.id));
+                toast.success("Justificante eliminado correctamente.");
+            }
+        }
+
+        //Manejo de errores
+        if (!respuesta.exito) {
+            toast.error(`No se pudo eliminar la solicitud`);
+        }
+
+        // Cerrar el modal 
         setSolicitudAEliminar(null);
     };
 
@@ -171,6 +202,7 @@ export default function Historial() {
         try {
             const nombreFinal = nombreArchivoGuardado.split('/').pop();
             await descargarArchivoJustificante(user.id, nombreFinal); 
+            toast.success("Descarga exitosa");
         } finally {
             setDescargandoArchivo(null); 
         }
