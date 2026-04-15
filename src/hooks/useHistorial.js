@@ -83,7 +83,7 @@ export const useHistorial = () => {
         }
     };
 
-
+    // obtener los pases del empleado 
     const obtenerPasesEmpleado = async (empleadoId) => {
         setCargando(true); 
         try {
@@ -104,11 +104,43 @@ export const useHistorial = () => {
         }
     };
 
+    // Eliminar un pase estado "pendiente"
+    const eliminarPase = async (id) => {
+        setCargando(true);
+        try {
+            const endpoint = `/pases/${id}`;
+            const respuesta = await request(endpoint, 'DELETE');
+            return { exito: true, data: respuesta };
+        } catch (error) {
+            console.error(`Error al eliminar el pase ${id}:`, error);
+            return { exito: false, mensaje: error.message };
+        } finally {
+            setCargando(false);
+        }
+    };
+
+    // Eliminar un justificante estado "pendiente"
+    const eliminarJustificante = async (id) => {
+        setCargando(true);
+        try {
+            const endpoint = `/justificantes/${id}`;
+            const respuesta = await request(endpoint, 'DELETE');
+            return { exito: true, data: respuesta };
+        } catch (error) {
+            console.error(`Error al eliminar el justificante ${id}:`, error);
+            return { exito: false, mensaje: error.message };
+        } finally {
+            setCargando(false);
+        }
+    };
+
     return {
         obtenerPasesEmpleado,
         cargando,
         obtenerJustificantesEmpleado,
         obtenerDetallesJustificante,
-        descargarArchivoJustificante
+        descargarArchivoJustificante,
+        eliminarPase,         
+        eliminarJustificante 
     };
 };
