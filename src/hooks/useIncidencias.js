@@ -1,6 +1,5 @@
 import { useApi } from '../hooks/useApi';
 import { useState, useCallback } from 'react';
-import { toast } from 'sonner';
 
 export const useIncidencias = () => {
     const { request, isLoading, error } = useApi();
@@ -27,7 +26,7 @@ export const useIncidencias = () => {
             const resultado = await request('/pases', 'POST', formData);
             return { exito: true, data: resultado };
         } catch (error) {
-            toast.error(`Error al crear el pase de salida: ${error.message}`);
+            console.error("Error en crearPaseSalida:", error);
             return { exito: false, mensaje: error.message };
         }
     };
@@ -51,7 +50,7 @@ export const useIncidencias = () => {
             const response = await request('/justificantes', 'POST', formData);
             return { exito: true, data: response };
         } catch (err) {
-            toast.error(`Error al solicitar el justificante: ${err.message}`);
+            console.error("Error en solicitarJustificante:", err);
             return { exito: false, mensaje: err.message };
         }
     };
@@ -78,7 +77,7 @@ export const useIncidencias = () => {
 
             return [...normalizar(justificantes, 'Justificante'), ...normalizar(pases, 'Pase')];
         } catch (err) {
-            toast.error(`Error al obtener las incidencias: ${err.message}`);
+            console.error("Error en obtenerIncidenciasParaJefe:", err);
             throw err;
         }
     }, [request]);
@@ -92,7 +91,7 @@ export const useIncidencias = () => {
             const res = await request(endpoint, 'GET');
             return res; 
         } catch (error) {
-            toast.error(`Error al obtener detalles: ${error.message}`);
+            console.error("Error al obtener detalles:", error);
             throw error;
         }
     };
@@ -112,7 +111,7 @@ export const useIncidencias = () => {
             const res = await request(url, 'PUT', body);
             return res;
         } catch (error) {
-            toast.error(`Error al revisar incidencia: ${error.message}`);
+            console.error("Error al revisar incidencia:", error);
             throw error;
         }
     };
@@ -120,15 +119,16 @@ export const useIncidencias = () => {
     // Descarga y abre un archivo adjunto usando la URL completa
     const descargarArchivoJustificante = async (urlArchivo) => {
         try {
-            // construimos la URL
             const url = urlArchivo; 
             
             const token = localStorage.getItem('usuario'); 
             if (!token) {
-                toast.error("Tu sesión ha expirado. Vuelve a iniciar sesión.");
+                console.error("JWT no encontrado bajo la clave 'usuario'.");
+                alert("Tu sesión ha expirado. Vuelve a iniciar sesión.");
                 return;
             }
 
+            // Usamos fetch nativo porque necesitamos manejar la respuesta como un Blob (archivo binario)
             const respuesta = await fetch(url, {
                 method: 'GET',
                 headers: {
@@ -140,18 +140,24 @@ export const useIncidencias = () => {
                 throw new Error(`Error HTTP del servidor: ${respuesta.status}`);
             }
 
+            // Convertimos la respuesta a binario (Blob)
             const blob = await respuesta.blob();
+            // Creamos una URL local temporal en el navegador para ese binario
             const urlTemporal = URL.createObjectURL(blob);
+            // Abrimos el archivo en una nueva pestaña (o forzamos descarga según la configuración del navegador)
             window.open(urlTemporal, '_blank');
 
+            // Limpieza: Revocamos la URL temporal después de 10 segundos para liberar memoria
             setTimeout(() => {
                 URL.revokeObjectURL(urlTemporal);
             }, 10000);
 
         } catch (error) {
-            toast.error(`Hubo un error al intentar abrir el archivo: ${error.message}`);
+            console.error("Error al descargar el archivo:", error);
+            alert(`Hubo un error al intentar abrir el archivo: ${error.message}`);
         }
     };
+
 
     return {
         obtenerDetalleIncidencia,
