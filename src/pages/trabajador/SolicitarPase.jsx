@@ -54,13 +54,13 @@ const handleSubmit = async (e) => {
 
     try {
         const hoyReal = new Date().toLocaleDateString('en-CA');
-        const fechaHoraISO = new Date(`${hoyReal}T${formData.horaSalida}:00`).toISOString();
+        const fechaHoraISO =`${hoyReal}T${formData.horaSalida}:00`; 
 
-        // 1. OBJETO PLANO (Sin FormData aquí)
+        // OBJETO PLANO 
         const objetoPase = {
-            empleadoId: Number(user.id), // Aseguramos que sea número
+            empleadoId: Number(user.id), 
             nombreCompleto: `${user.nombre} ${user.apellidoPaterno || ''}`.trim(),
-            jefeId: Number(user.departamentoId), // Usamos el ID del departamento como jefeId
+            jefeId: Number(user.departamentoId), 
             horaSolicitada: fechaHoraISO,
             fechaSolicitud: hoyReal,
             descripcion: formData.detalles,
@@ -69,7 +69,7 @@ const handleSubmit = async (e) => {
             QR: ""
         };
 
-        // 2. Enviamos el objeto y los archivos por separado al hook
+        // objeto y los archivos 
         const resultado = await crearPaseSalida(objetoPase, archivos);
 
         if (resultado.exito) {
