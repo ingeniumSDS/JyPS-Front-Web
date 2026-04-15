@@ -75,3 +75,59 @@ Hemos dividido la lógica en 3 capas distintas:
     ├── 📜 main.jsx        
     └── 📜 index.css   
 ```
+
+---
+
+## 🐳 Integración con Docker (API existente)
+
+Se agregaron archivos para contenerizar este frontend y conectarlo al servicio de API `jyps-api` ya definido en tu `docker-compose`:
+
+* `Dockerfile` (build multi-stage con Vite + Nginx)
+* `nginx.conf` (servir SPA + proxy `/api/*` -> `jyps-api:8081`)
+* `.dockerignore`
+* `.env.example`
+
+### 1) Servicio a agregar en el `docker-compose.yml` del backend
+
+```yaml
+services:
+    jyps-api:
+        # ... tu configuración actual
+
+    jyps-front:
+        build:
+            context: ../JyPS-Front-Web
+            dockerfile: Dockerfile
+            args:
+                VITE_API_BASE_URL: /api/v1
+        container_name: jyps_frontend
+        ports:
+            - "5173:80"
+        depends_on:
+            - jyps-api
+```
+
+> Nota: `context: ../JyPS-Front-Web` asume que ambos repositorios (`JyPS-BackEnd` y `JyPS-Front-Web`) están al mismo nivel.
+
+### 2) Levantar servicios
+
+```bash
+docker compose up --build -d
+```
+
+### 3) Probar
+
+* Frontend: `http://localhost:5173`
+* API (directa): `http://localhost:8081`
+* API desde frontend (proxy): `http://localhost:5173/api/v1/...`
+
+### 4) Desarrollo local con Vite
+
+Para `npm run dev`, puedes usar:
+
+```env
+VITE_API_BASE_URL=/api/v1
+VITE_API_PROXY_TARGET=http://localhost:8081
+```
+
+Con eso, Vite hace proxy local y evitas CORS durante desarrollo.

@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 
 // Fallback de seguridad
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://ced-service.porgy-diatonic.ts.net:10000/api/v1';
+const BASE_URL = (import.meta.env.VITE_API_BASE_URL || '/api/v1').replace(/\/$/, '');
 
 export const useApi = () => {
     const [isLoading, setIsLoading] = useState(false);
@@ -37,7 +37,8 @@ export const useApi = () => {
                 config.body = isFormData ? body : JSON.stringify(body);
             }
 
-            const response = await fetch(`${BASE_URL}${endpoint}`, config);
+            const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+            const response = await fetch(`${BASE_URL}${normalizedEndpoint}`, config);
             
             // Nuestra solución anti-errores 201
             const text = await response.text();
