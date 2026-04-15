@@ -268,7 +268,7 @@ export default function Historial() {
                                     )}
 
                                     <div className="flex flex-wrap gap-2 mt-2">
-                                        {solicitud.estado === 'aprobado' && solicitud.tipo === 'pase' && solicitud.codigoQR && !isPaseCaducado(solicitud) && (
+                                        {(solicitud.estado === 'aprobado' || solicitud.estado=== 'fuera' )&& solicitud.tipo === 'pase' && solicitud.codigoQR && !isPaseCaducado(solicitud) && (
                                             <button 
                                                 onClick={() => setSelectedQR(solicitud)}
                                                 className="flex items-center gap-1 bg-blue-900 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-800 transition-colors"
