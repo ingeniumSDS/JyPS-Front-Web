@@ -7,11 +7,11 @@ export default function TrabajadorLayout() {
     const location = useLocation();
 
     // Extraemos el usuario 
-    const { user, logout } = useAuth();
+    const { user, cerrarSesion } = useAuth();
 
     //  lógica de cerrar sesión 
     const handleLogout = () => {
-        logout();
+        cerrarSesion();
         navigate('/login');
     };
 
