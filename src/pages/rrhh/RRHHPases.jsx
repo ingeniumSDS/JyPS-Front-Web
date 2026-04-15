@@ -212,7 +212,7 @@ export default function Pases() {
                                             <div>
                                                 <span className="text-gray-600 mr-1">Horario:</span>
                                                 <span className="font-medium text-[#0F2C59]">
-                                                    {formatTime(pase.horaSalidaReal)} - {formatTime(pase.horaEsperada)}
+                                                    {formatTime(pase.horaSalidaReal)} - {formatTime(pase.horaRetornoReal)}
                                                 </span>
                                             </div>
                                         </div>
