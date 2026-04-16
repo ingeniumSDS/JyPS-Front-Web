@@ -1,7 +1,7 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext"; 
 
-export default function RutaProtegida({ children, rolesPermitidos }) {
+export default function RutaProtegida({ children, rolesPermitidos, requiereRolExclusivo = false }) {
     const { user, isLoading } = useAuth(); 
 
     // Manejo de estado de carga inicial
@@ -15,12 +15,23 @@ export default function RutaProtegida({ children, rolesPermitidos }) {
     }
 
     // Extraccion segura de roles (fallback a arreglo vacío)
-    const rolesDelUsuario = user.roles || []; 
+    const rolesDelUsuario = Array.isArray(user.roles)
+        ? user.roles
+        : user.roles
+            ? [user.roles]
+            : [];
 
-    // Validación de RBAC (intersección de roles)
-    const tienePermiso = rolesPermitidos 
-        ? rolesPermitidos.some(rol => rolesDelUsuario.includes(rol)) 
-        : true; 
+    // Validacion de RBAC (interseccion de roles)
+    const tieneRolPermitido = rolesPermitidos
+        ? rolesPermitidos.some((rol) => rolesDelUsuario.includes(rol))
+        : true;
+
+    // Si es exclusivo, no permite roles adicionales a los definidos
+    const cumpleExclusividad = requiereRolExclusivo && rolesPermitidos
+        ? rolesDelUsuario.length === rolesPermitidos.length && rolesPermitidos.every((rol) => rolesDelUsuario.includes(rol))
+        : true;
+
+    const tienePermiso = tieneRolPermitido && cumpleExclusividad;
 
     // Interfaz de fallback para accesos no autorizados (HTTP 403)
     if (!tienePermiso) {
