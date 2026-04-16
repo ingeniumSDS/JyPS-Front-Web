@@ -48,18 +48,18 @@ export const useApi = () => {
                 try {
                     data = JSON.parse(text);
                 } catch (e) {
-                    data = { message: text };
+                    data = { mensaje: text };
                 }
             }
 
             if (!response.ok) {
-                throw new Error(data.message || data.error || `Error HTTP: ${response.status}`);
+                throw new Error(data.mensaje);
             }
 
             return data;
             
         } catch (err) {
-            setError(err.message);
+            setError(err.mensaje);
             throw err; 
         } finally {
             setIsLoading(false);
