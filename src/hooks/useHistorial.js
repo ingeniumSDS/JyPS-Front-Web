@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useApi } from './useApi';
+import { data } from 'react-router';
 
 export const useHistorial = () => {
     const { request } = useApi();
@@ -135,7 +136,23 @@ export const useHistorial = () => {
         }
     };
 
+     //Cambiar esstado a revocar
+    const revocarPaedesalida = async (id) =>{
+        setCargando(true)
+        try{
+            const endponit = `/pases/${id}/revocar`;
+            const respuesta = await request(endponit, 'PATCH');
+            return {exito: true, data: request};
+        }catch (err){
+            console.error(`Error al eliminar el pase ${id}:`, err);
+            return { exito: false, mensaje: error.message };
+        }finally{
+            setCargando(false);
+        }
+    };
+
     return {
+        revocarPaedesalida,
         obtenerPasesEmpleado,
         cargando,
         obtenerJustificantesEmpleado,
