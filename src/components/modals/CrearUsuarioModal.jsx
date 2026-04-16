@@ -236,7 +236,7 @@ export function CrearUsuarioModal({ isOpen, onClose, onSubmit, departamentos = [
                                     <input 
                                         type="text" name="nombre" value={formData.nombre} onChange={handleChange} 
                                         className={`w-full px-4 py-2.5 rounded-lg border ${errores.nombre ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-300'} focus:ring-2 focus:ring-[#0F2C59]/20 focus:border-[#0F2C59] outline-none transition-all`} 
-                                        placeholder="Ej. Juan" 
+                                        placeholder="Ej. Raul" 
                                     />
                                     {errores.nombre && <p className="text-red-500 text-xs mt-1 font-medium">{errores.nombre}</p>}
                                 </div>
@@ -245,7 +245,7 @@ export function CrearUsuarioModal({ isOpen, onClose, onSubmit, departamentos = [
                                     <input 
                                         type="text" name="apellidoPaterno" value={formData.apellidoPaterno} onChange={handleChange} 
                                         className={`w-full px-4 py-2.5 rounded-lg border ${errores.apellidoPaterno ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-300'} focus:ring-2 focus:ring-[#0F2C59]/20 focus:border-[#0F2C59] outline-none transition-all`} 
-                                        placeholder="Ej. Pérez" 
+                                        placeholder="Ej. Samchez" 
                                     />
                                     {errores.apellidoPaterno && <p className="text-red-500 text-xs mt-1 font-medium">{errores.apellidoPaterno}</p>}
                                 </div>
@@ -254,7 +254,7 @@ export function CrearUsuarioModal({ isOpen, onClose, onSubmit, departamentos = [
                                     <input 
                                         type="text" name="apellidoMaterno" value={formData.apellidoMaterno} onChange={handleChange} 
                                         className={`w-full px-4 py-2.5 rounded-lg border ${errores.apellidoMaterno ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-300'} focus:ring-2 focus:ring-[#0F2C59]/20 focus:border-[#0F2C59] outline-none transition-all`} 
-                                        placeholder="Ej. López" 
+                                        placeholder="Ej. Guzman" 
                                     />
                                     {errores.apellidoMaterno && <p className="text-red-500 text-xs mt-1 font-medium">{errores.apellidoMaterno}</p>}
                                 </div>

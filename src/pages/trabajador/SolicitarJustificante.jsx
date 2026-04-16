@@ -114,11 +114,11 @@ export default function SolicitarJustificante() {
                 toast.success('¡Justificante enviado correctamente!');
                 navigate(-1, { replace: true }); 
             } else {
-                toast.error('Error al enviar el justificante');
+                toast.error(resultado.mensaje)
                 setIsSubmitting(false); 
             }
         } catch (error) {
-            toast.error('Ocurrió un error inesperado.');
+            toast.error('Error de conexión');
             setIsSubmitting(false); 
         }
     };
