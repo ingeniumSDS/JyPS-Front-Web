@@ -46,7 +46,7 @@ export default function GestionDepartamentos() {
                     console.error("Formato de usuarios no válido");
                 }
             } catch (error) {
-                console.error("Error al obtener usuarios:", error);
+                console.error("Error al obtener usuarios");
             }
         };
 
@@ -70,7 +70,7 @@ export default function GestionDepartamentos() {
                 }));
                 setDepartamentos(deptosAdaptados);
             } else {
-                console.error("Error al cargar departamentos:", resultado.mensaje);
+                console.error("Error al cargar departamentos");
             }
             setIsLoading(false);
         };
@@ -133,7 +133,7 @@ export default function GestionDepartamentos() {
 
                 toast.success('Jefe asignado correctamente'); 
             } else {
-                console.error("Falló la asignación del jefe:", resultado.mensaje);
+                console.error("Falló la asignación del jefe");
                 toast.error('Hubo un error al asignar al jefe');
             }
             setIsSaving(false);
@@ -170,8 +170,8 @@ export default function GestionDepartamentos() {
 
                 toast.success('Departamento creado exitosamente');
             } else {
-                console.error("Falló la creación:", resultado.mensaje);
-                toast.error(resultado.mensaje || 'Hubo un error al crear el departamento');
+                console.error("Falló la creación");
+                toast.error('Hubo un error al crear el departamento');
             }
             setIsSaving(false);
         }
