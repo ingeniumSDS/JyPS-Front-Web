@@ -39,7 +39,7 @@ const obtenerRutaPorRol = (datosDelToken) => {
 
 export default function Login() {
     const navigate = useNavigate();
-    const { iniciarSesion } = useAuth();
+    const { iniciarSesion, user, isLoading: isAuthLoading } = useAuth();
     const { loginUsuario, isLoading: isApiLoading } = useUsuarios();
     
     // ESTADOS: SEGURIDAD 
@@ -91,6 +91,13 @@ export default function Login() {
         }
         return () => clearInterval(intervalo);
     }, [estaBloqueado, tiempoRestante]);
+
+    useEffect(() => {
+        if (isAuthLoading || !user) return;
+
+        const rutaDestino = obtenerRutaPorRol(user);
+        navigate(rutaDestino, { replace: true });
+    }, [isAuthLoading, user, navigate]);
 
     // HANDLERS 
     const handleSubmit = async (e) => { 
