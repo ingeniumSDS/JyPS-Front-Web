@@ -4,8 +4,8 @@ import { useState, useCallback } from 'react';
 export const useIncidencias = () => {
     const { request, isLoading, error } = useApi();
 
-       // Crear Pase de Salida (POST /pases)
-        const crearPaseSalida = async (datosPase, archivos) => {
+    // Crear Pase de Salida (POST /pases)
+    const crearPaseSalida = async (datosPase, archivos) => {
         try {
             const formData = new FormData();
 
