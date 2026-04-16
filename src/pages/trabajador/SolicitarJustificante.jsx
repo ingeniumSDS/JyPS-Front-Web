@@ -114,7 +114,7 @@ export default function SolicitarJustificante() {
                 toast.success('¡Justificante enviado correctamente!');
                 navigate(-1, { replace: true }); 
             } else {
-                toast.error(resultado.mensaje)
+                toast.error(resultado.mensaje + ". No se puede cargar mas de 3 archivos." )
                 setIsSubmitting(false); 
             }
         } catch (error) {
