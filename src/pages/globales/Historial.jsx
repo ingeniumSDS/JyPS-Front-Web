@@ -16,12 +16,14 @@ import {
     Trash2, 
     AlertCircle,
     Paperclip,
-    Download
+    Download,
+    RotateCcw
 } from 'lucide-react'; 
 
 export default function Historial() {
     const { user } = useAuth(); 
     const { 
+        revocarPaedesalida,
         obtenerJustificantesEmpleado, 
         obtenerPasesEmpleado,
         descargarArchivoJustificante, 
@@ -38,6 +40,7 @@ export default function Historial() {
 
     const [selectedQR, setSelectedQR] = useState(null);
     const [solicitudAEliminar, setSolicitudAEliminar] = useState(null);
+    const [solicitudRevocar, setsolicitudRevocar] = useState(null);
     const [solicitudAEditar, setSolicitudAEditar] = useState(null);
 
     // Formateador robusto para la UI
@@ -139,6 +142,7 @@ export default function Historial() {
             rechazado: { bg: 'bg-red-100', text: 'text-red-800', icon: XCircle },
             pendiente: { bg: 'bg-yellow-100', text: 'text-yellow-800', icon: Clock },
             fuera: { bg: 'bg-purple-100', text: 'text-purple-800', icon: DoorOpen },
+            revocado: { bg: 'bg-gray-200', text: 'text-gray-700', icon: RotateCcw }, // AGREGADO para que se vea bien al recargar
         };
         
         const badge = badges[estado] || badges.pendiente;
@@ -153,16 +157,13 @@ export default function Historial() {
 
     const handleEliminar = async () => {
         if (!solicitudAEliminar) return;
-
         //VALIDACION ESTRICTA
         if (solicitudAEliminar.estado !== 'pendiente') {
             toast.error("Acción no permitida: Solo se pueden eliminar solicitudes en estado pendiente.");
             setSolicitudAEliminar(null);
             return;
         }
-
         let respuesta;
-
         // API por tipo
         if (solicitudAEliminar.tipo === 'pase') {
             respuesta = await eliminarPase(solicitudAEliminar.id);
@@ -179,15 +180,43 @@ export default function Historial() {
                 toast.success("Justificante eliminado correctamente.");
             }
         }
-
         //Manejo de errores
         if (!respuesta.exito) {
             toast.error(`No se pudo eliminar la solicitud`);
         }
-
         // Cerrar el modal 
         setSolicitudAEliminar(null);
     };
+
+    // FUNCIÓN REVOCAR CORREGIDA
+    const handleRevocar = async () => {
+        if (!solicitudRevocar) return;
+
+        if(solicitudRevocar.estado !== 'aprobado'){
+            toast.error("Acción no permitida: Solo se pueden revocar solicitudes en estado aprobado.");
+            setsolicitudRevocar(null);
+            return;
+        }
+        
+        let respuesta = { exito: false }; 
+        
+        if(solicitudRevocar.tipo === "pase"){
+            respuesta = await revocarPaedesalida(solicitudRevocar.id);
+            
+            if (respuesta.exito){
+                setPasesApi(prev => prev.map(s => 
+                    s.id === solicitudRevocar.id ? { ...s, estado: 'revocado' } : s
+                ));
+                toast.success("Pase revocado correctamente.");
+            }
+        } 
+        
+        if (!respuesta.exito){
+            toast.error(`No se pudo revocar`);
+        }
+        
+        setsolicitudRevocar(null);
+    }
 
     const handleGuardarEdicion = (solicitudActualizada) => {
         if (solicitudActualizada.tipo === 'pase') {
@@ -272,7 +301,7 @@ export default function Historial() {
                                     </div>
 
                                     {solicitud.motivoRechazo && (
-                                        <div className="mb-4 p-3 bg-green-50  border border-green-200 rounded-lg text-sm text-green-700">
+                                        <div className="mb-4 p-3 bg-gray-50  border border-gray-200 rounded-lg text-sm text-gray-700">
                                             <strong>Nota del Jefe:</strong> {solicitud.motivoRechazo}
                                         </div>
                                     )}
@@ -317,6 +346,15 @@ export default function Historial() {
                                                 <Trash2 size={16} /> Eliminar
                                             </button>
                                         )}
+
+                                        {solicitud.estado === 'aprobado' &&(
+                                            <button
+                                                onClick={() =>   setsolicitudRevocar(solicitud)}
+                                                className="flex items-center gap-1 bg-white border border-red-200 text-red-600 px-4 py-2 rounded-lg text-sm hover:bg-red-50"
+                                            >
+                                                <RotateCcw size={16} />Revocar 
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -340,6 +378,16 @@ export default function Historial() {
                 message={`¿Estás seguro? Esta acción eliminará tu solicitud de ${solicitudAEliminar?.tipo} y no se puede deshacer.`}
                 type="danger"
                 confirmText="Sí, eliminar"
+            />
+
+            <ConfirmModal 
+                isOpen={!!solicitudRevocar}
+                onClose={() => setsolicitudRevocar(null)}
+                onConfirm={handleRevocar}
+                title="Revocar solicitud"
+                message={`¿Estás seguro? Esta acción revocara tu solicitud de ${solicitudRevocar?.tipo} y no se puede deshacer.`}
+                type="danger"
+                confirmText={"Si, revocar"}       
             />
         </div>
     );
