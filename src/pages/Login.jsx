@@ -128,7 +128,7 @@ export default function Login() {
                 setError(''); 
             } else {
                 const intentosRestantes = MAX_INTENTOS - nuevosIntentos;
-                setError(`${response.mensaje}. Te quedan ${intentosRestantes} intento(s).`);
+                setError(` Erros de credenciales. Te quedan ${intentosRestantes} intento(s).`);
             }
         }
     };
