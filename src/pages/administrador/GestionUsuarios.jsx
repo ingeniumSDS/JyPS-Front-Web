@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Search, Edit2, UserCheck, UserX, Building2, Phone, Mail, Plus, Check, X as XIcon } from 'lucide-react';
+import { Users, Search, Edit2, UserCheck, UserX, Building2, Phone, Mail, Plus, Check, X as XIcon, RotateCcw } from 'lucide-react';
 import { useGestion } from '../../hooks/useGestion';
 
 import ConfirmModal from '../../components/modals/ConfirmModal';
@@ -48,6 +48,7 @@ export default function GestionUsuarios() {
 
     const [isCrearModalOpen, setIsCrearModalOpen] = useState(false);
     const [usuarioAEditar, setUsuarioAEditar] = useState(null);
+    
     const [confirmModal, setConfirmModal] = useState({
         isOpen: false,
         usuarioId: null,
@@ -57,7 +58,14 @@ export default function GestionUsuarios() {
         type: 'success'
     });
 
-    const { crearUsuario, obtenerUsuarios, obtenerDepartamento, actualizarUsuario, cambiarEstadoUsuario } = useGestion();
+    // NUEVO ESTADO: Para el modal de confirmación de reseteo
+    const [resetConfirmModal, setResetConfirmModal] = useState({
+        isOpen: false,
+        usuarioId: null
+    });
+
+    // Importamos resetearCuentaUsuario del hook
+    const { crearUsuario, obtenerUsuarios, obtenerDepartamento, actualizarUsuario, cambiarEstadoUsuario, resetearCuentaUsuario } = useGestion();
 
     const cargarDatosIniciales = async () => {
         setIsCargandoInicial(true);
@@ -147,6 +155,32 @@ export default function GestionUsuarios() {
             toast.error("Ocurrió un error inesperado al cambiar el estado");
         }
     };
+
+    // --- NUEVAS FUNCIONES PARA RESETEO DE CUENTA ---
+    const handleAbrirReset = (id) => {
+        setResetConfirmModal({
+            isOpen: true,
+            usuarioId: id
+        });
+    };
+
+    const ejecutarReseteoCuenta = async () => {
+        try {
+            const response = await resetearCuentaUsuario(resetConfirmModal.usuarioId);
+
+            if (response.exito) {
+                toast.success('EXITO!!. La contraseña es: admin');
+                setResetConfirmModal({ isOpen: false, usuarioId: null });
+                setIsCrearModalOpen(false);
+            } else {
+                toast.error( 'Hubo un error al resetear la cuenta.');
+            }
+        } catch (error) {
+            console.error("Error al resetear la cuenta:", error);
+            toast.error("Ocurrió un error inesperado al resetear la cuenta");
+        }
+    };
+    
 
     const obtenerNombreDepto = (usuario) => {
         const id = usuario.departamentoId || parseInt(String(usuario.departamento).replace(/\D/g, ''), 10);
@@ -383,8 +417,10 @@ export default function GestionUsuarios() {
                 onSubmit={handleGuardarUsuario}
                 departamentos={departamentosDb}
                 usuarioAEditar={usuarioAEditar}
+                onReset={handleAbrirReset} 
             />
 
+            {/* Activación/Desactivación */}
             <ConfirmModal
                 isOpen={confirmModal.isOpen}
                 onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
@@ -392,6 +428,17 @@ export default function GestionUsuarios() {
                 title={confirmModal.title}
                 message={confirmModal.message}
                 type={confirmModal.type}
+            />
+
+            {/* Confirmar Reseteo de Cuenta */}
+            <ConfirmModal
+                isOpen={resetConfirmModal.isOpen}
+                onClose={() => setResetConfirmModal({ isOpen: false, usuarioId: null })}
+                onConfirm={ejecutarReseteoCuenta}
+                title="Confirmar Reseteo de Cuenta"
+                message="¿Estás seguro de resetear esta cuenta? El usuario perderá el acceso a su cuenta"
+                type="danger"
+                confirmText ="Resetear"
             />
         </div>
     );
