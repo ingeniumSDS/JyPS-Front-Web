@@ -8,18 +8,25 @@ import { useIncidencias } from '../../hooks/useIncidencias';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'sonner';
 
-// --- Helpers de Fechas ---
+// --- Helpers de Fechas (Corregidos a Días Hábiles) ---
 const calcularFechaMinima = () => {
     const fechaActual = new Date();
-    fechaActual.setDate(fechaActual.getDate() - 3);
+    let diasHabilesContados = 0;
+
+    while (diasHabilesContados < 3) {
+        fechaActual.setDate(fechaActual.getDate() - 1);
+        if (fechaActual.getDay() !== 0 && fechaActual.getDay() !== 6) {
+            diasHabilesContados++;
+        }
+    }
     const offset = fechaActual.getTimezoneOffset() * 60000;
     return new Date(fechaActual.getTime() - offset).toISOString().split('T')[0];
 };
 
 const calcularFechaMaxima = () => {
-    const ayer = new Date();
-    ayer.setDate(ayer.getDate());
-    return ayer.toISOString().split('T')[0];
+    const hoy = new Date();
+    const offset = hoy.getTimezoneOffset() * 60000;
+    return new Date(hoy.getTime() - offset).toISOString().split('T')[0];
 };
 
 export default function SolicitarJustificante() {
@@ -31,9 +38,30 @@ export default function SolicitarJustificante() {
     const [formData, setFormData] = useState({ fecha: '', detalles: '' });
     const [archivos, setArchivos] = useState([]);
     const [detallesError, setDetallesError] = useState('');
-    const [isSubmitting, setIsSubmitting] = useState(false); // Estado local para bloqueo inmediato
+    const [isSubmitting, setIsSubmitting] = useState(false); 
 
     // --- Handlers ---
+    
+    //Validacion sabado/domingazo
+    const handleFechaChange = (e) => {
+        const valor = e.target.value;
+        if (!valor) {
+            setFormData({ ...formData, fecha: '' });
+            return;
+        }
+
+        //horaria 
+        const fechaSeleccionada = new Date(valor + 'T00:00:00');
+        const dia = fechaSeleccionada.getDay();
+
+        if (dia === 0 || dia === 6) {
+            toast.error('No puedes justificar sábados ni domingos. Selecciona un día hábil.');
+            setFormData({ ...formData, fecha: '' }); 
+        } else {
+            setFormData({ ...formData, fecha: valor });
+        }
+    };
+
     const handleDetallesChange = (e) => {
         const value = e.target.value;
         setFormData({ ...formData, detalles: value });
@@ -66,7 +94,6 @@ export default function SolicitarJustificante() {
         
         if (botonBloqueado) return;
 
-        // Bloqueo inmediato de la UI
         setIsSubmitting(true);
 
         const datosPayload = {
@@ -92,10 +119,9 @@ export default function SolicitarJustificante() {
             }
         } catch (error) {
             toast.error('Ocurrió un error inesperado.');
-            setIsSubmitting(false); //gir error de red
+            setIsSubmitting(false); 
         }
     };
-
 
     return (
         <div className="pb-8 max-w-3xl mx-auto animate-fade-in px-4">
@@ -114,7 +140,7 @@ export default function SolicitarJustificante() {
             <Card className="p-4 sm:p-8 border-t-4 border-t-[#28A745]">
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="grid sm:grid-cols-2 gap-4">
-                        <Input label="Nombre Completo" value={`${user?.nombre} ${user?.apellidoPaterno || ''} ${user.apellidoMaterno || ''}`} disabled className="bg-gray-50" />
+                        <Input label="Nombre Completo" value={`${user?.nombre} ${user?.apellidoPaterno || ''} ${user?.apellidoMaterno || ''}`} disabled className="bg-gray-50" />
                         <Input label="Departamento" value={user?.nombreDepartamento || 'Sin asignar'} disabled className="bg-gray-50" />
                     </div>
 
@@ -124,7 +150,7 @@ export default function SolicitarJustificante() {
                                 type="date"
                                 label="Fecha de Inasistencia"
                                 value={formData.fecha}
-                                onChange={(e) => setFormData({ ...formData, fecha: e.target.value })}
+                                onChange={handleFechaChange} // Reemplazado por el nuevo handler
                                 required
                                 disabled={estaCargando}
                                 min={calcularFechaMinima()}
