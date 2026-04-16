@@ -72,10 +72,10 @@ export default function GestionUsuarios() {
         ]);
         
         if (resUsuarios.exito) setUsuarios(resUsuarios.data);
-        else console.error("Error al cargar usuarios:", resUsuarios.mensaje); 
+        else console.error("Error al cargar usuarios"); 
 
         if (resDepartamentos.exito) setDepartamentosDb(resDepartamentos.data);
-        else console.error("Error al cargar departamentos:", resDepartamentos.mensaje); 
+        else console.error("Error al cargar departamentos"); 
 
         setIsCargandoInicial(false);
     };
@@ -104,7 +104,7 @@ export default function GestionUsuarios() {
                 handleCerrarCrearModal();
                 cargarDatosIniciales(); 
             } else {
-                toast.error("Error al actualizar: " + response.mensaje);
+                toast.error("Error al actualizar ");
             }
         } else {
             const response = await crearUsuario(formData);
@@ -113,7 +113,7 @@ export default function GestionUsuarios() {
                 handleCerrarCrearModal(); 
                 cargarDatosIniciales(); 
             } else {
-                toast.error("Error al crear: " + response.mensaje);
+                toast.error("Error al crear");
             }
         }
     };
@@ -149,10 +149,10 @@ export default function GestionUsuarios() {
                 // 4. Recargamos la tabla para ver el cambio reflejado
                 cargarDatosIniciales(); 
             } else {
-                toast.error("Error al cambiar el estado: " + response.mensaje);
+                toast.error("Error al cambiar el estado");
             }
         } catch (error) {
-            console.error("Error al cambiar el estado:", error);
+            console.error("Error al cambiar el estado");
             toast.error("Ocurrió un error inesperado al cambiar el estado");
         }
     };
