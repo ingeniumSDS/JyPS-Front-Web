@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Search, Edit2, UserCheck, UserX, Building2, Phone, Mail, Plus, Check, X as XIcon } from 'lucide-react';
+import { Users, Search, Edit2, UserCheck, UserX, Building2, Phone, Mail, Plus, Check, X as XIcon, RotateCcw } from 'lucide-react';
 import { useGestion } from '../../hooks/useGestion';
 
 import ConfirmModal from '../../components/modals/ConfirmModal';
@@ -28,8 +28,6 @@ const obtenerColorRol = (rol) => {
         case 'guardia': 
         case 'seguridad':
             return 'bg-amber-200 text-amber-700';
-        case 'auditor':
-            return 'bg-purple-200 text-purple-700';       
         default:
             return 'bg-slate-100 text-slate-700';
     }
@@ -38,19 +36,19 @@ const obtenerColorRol = (rol) => {
 export default function GestionUsuarios() {
     
     // --- ESTADOS ---
-    // Datos principales
     const [usuarios, setUsuarios] = useState([]);
     const [departamentosDb, setDepartamentosDb] = useState([]);
     const [isCargandoInicial, setIsCargandoInicial] = useState(true);
 
-    // Filtros de búsqueda
     const [busqueda, setBusqueda] = useState('');
     const [filtroEstado, setFiltroEstado] = useState('todos'); 
     const [filtroDepartamento, setFiltroDepartamento] = useState('todos');
 
-    // Control de modales
+    const [visibleCount, setVisibleCount] = useState(5);
+
     const [isCrearModalOpen, setIsCrearModalOpen] = useState(false);
     const [usuarioAEditar, setUsuarioAEditar] = useState(null);
+    
     const [confirmModal, setConfirmModal] = useState({
         isOpen: false,
         usuarioId: null,
@@ -60,12 +58,17 @@ export default function GestionUsuarios() {
         type: 'success'
     });
 
-    // --- HOOKS Y EFECTOS ---
-    const { crearUsuario, obtenerUsuarios, obtenerDepartamento, actualizarUsuario, cambiarEstadoUsuario } = useGestion();
+    // NUEVO ESTADO: Para el modal de confirmación de reseteo
+    const [resetConfirmModal, setResetConfirmModal] = useState({
+        isOpen: false,
+        usuarioId: null
+    });
+
+    // Importamos resetearCuentaUsuario del hook
+    const { crearUsuario, obtenerUsuarios, obtenerDepartamento, actualizarUsuario, cambiarEstadoUsuario, resetearCuentaUsuario } = useGestion();
 
     const cargarDatosIniciales = async () => {
         setIsCargandoInicial(true);
-        
         const [resUsuarios, resDepartamentos] = await Promise.all([
             obtenerUsuarios(),
             obtenerDepartamento()
@@ -84,8 +87,11 @@ export default function GestionUsuarios() {
         cargarDatosIniciales();
     }, []);
 
-    // --- MANEJADORES DE EVENTOS (HANDLERS) ---
-    // Modal Formulario (Crear/Editar)
+    // la cantidad visible a 5 
+    useEffect(() => {
+        setVisibleCount(5);
+    }, [busqueda, filtroEstado, filtroDepartamento]);
+
     const handleAbrirEditar = (usuario) => {
         setUsuarioAEditar(usuario); 
         setIsCrearModalOpen(true);  
@@ -118,7 +124,6 @@ export default function GestionUsuarios() {
         }
     };
 
-    // Modal Confirmación (Estado)
     const handleToggleEstado = (usuario) => {
         const estaActivo = usuario.isActive; 
         setConfirmModal({
@@ -135,18 +140,12 @@ export default function GestionUsuarios() {
 
     const ejecutarCambioEstado = async () => {
         try {
-            // 1. Determinamos qué booleano mandar basado en la acción
             const nuevoEstado = confirmModal.accion === 'activar' ? true : false;
-            
-            // 2. Llamamos a nuestra nueva función del Hook
             const response = await cambiarEstadoUsuario(confirmModal.usuarioId, nuevoEstado);
 
             if (response.exito) {
-                // 3. Notificamos éxito y cerramos el modal
                 toast.success(`¡Usuario ${confirmModal.accion === 'activar' ? 'activado' : 'desactivado'} con éxito!`);
                 setConfirmModal(prev => ({ ...prev, isOpen: false }));
-                
-                // 4. Recargamos la tabla para ver el cambio reflejado
                 cargarDatosIniciales(); 
             } else {
                 toast.error("Error al cambiar el estado");
@@ -157,8 +156,32 @@ export default function GestionUsuarios() {
         }
     };
 
-    // --- PROCESAMIENTO DE DATOS ---
-    // Traduce el ID o string del departamento a su nombre real
+    // --- NUEVAS FUNCIONES PARA RESETEO DE CUENTA ---
+    const handleAbrirReset = (id) => {
+        setResetConfirmModal({
+            isOpen: true,
+            usuarioId: id
+        });
+    };
+
+    const ejecutarReseteoCuenta = async () => {
+        try {
+            const response = await resetearCuentaUsuario(resetConfirmModal.usuarioId);
+
+            if (response.exito) {
+                toast.success('EXITO!!. La contraseña es: admin');
+                setResetConfirmModal({ isOpen: false, usuarioId: null });
+                setIsCrearModalOpen(false);
+            } else {
+                toast.error( 'Hubo un error al resetear la cuenta.');
+            }
+        } catch (error) {
+            console.error("Error al resetear la cuenta:", error);
+            toast.error("Ocurrió un error inesperado al resetear la cuenta");
+        }
+    };
+    
+
     const obtenerNombreDepto = (usuario) => {
         const id = usuario.departamentoId || parseInt(String(usuario.departamento).replace(/\D/g, ''), 10);
         if (id) {
@@ -170,12 +193,10 @@ export default function GestionUsuarios() {
 
     const departamentosNombres = departamentosDb.map(d => d.nombre);
     
-    // Estadísticas
     const totalUsuarios = usuarios.length;
     const usuariosActivos = usuarios.filter(u => u.isActive).length;
     const usuariosInactivos = totalUsuarios - usuariosActivos;
 
-    // Filtros
     const usuariosFiltrados = usuarios.filter(usuario => {
         const coincideBusqueda = 
             usuario.nombreCompleto.toLowerCase().includes(busqueda.toLowerCase()) || 
@@ -193,14 +214,15 @@ export default function GestionUsuarios() {
         return coincideBusqueda && coincideEstado && coincideDepto;
     });
 
-    // --- RENDERIZADO ---
+    // Cortamos el arreglo para mostrar a 5
+    const usuariosPaginados = usuariosFiltrados.slice(0, visibleCount);
+
     if (isCargandoInicial) {
         return <div className="flex justify-center items-center h-64 text-[#0F2C59] font-semibold">Cargando información...</div>;
     }
 
     return (
         <div className="space-y-6">
-            
             {/* Encabezado y Acción Principal */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
@@ -292,7 +314,7 @@ export default function GestionUsuarios() {
 
             {/* Listado de Usuarios */}
             <div className="grid grid-cols-1 gap-6">
-                {usuariosFiltrados.map((usuario) => (
+                {usuariosPaginados.map((usuario) => (
                     <Card key={usuario.id} className="overflow-hidden hover:shadow-md transition-shadow duration-300 border-gray-200 flex flex-col rounded-xl">
                         <div className="p-4 sm:p-5 flex-1">
                             <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-4 sm:mb-2">
@@ -364,6 +386,18 @@ export default function GestionUsuarios() {
                     </Card>
                 ))}
             </div>
+
+            {/*Boton de Cargar mas*/}
+            {visibleCount < usuariosFiltrados.length && (
+                <div className="flex justify-center mt-6">
+                    <Button 
+                        onClick={() => setVisibleCount(prev => prev + 5)} 
+                        className="bg-white border-1 border-[#0F2C59] text-[#0F2C59]  font-semibold px-8 py-2 rounded-xl transition-colors"
+                    >
+                        Cargar más usuarios
+                    </Button>
+                </div>
+            )}
             
             {/* Estado Vacío */}
             {usuariosFiltrados.length === 0 && !isCargandoInicial && (
@@ -383,8 +417,10 @@ export default function GestionUsuarios() {
                 onSubmit={handleGuardarUsuario}
                 departamentos={departamentosDb}
                 usuarioAEditar={usuarioAEditar}
+                onReset={handleAbrirReset} 
             />
 
+            {/* Activación/Desactivación */}
             <ConfirmModal
                 isOpen={confirmModal.isOpen}
                 onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
@@ -392,6 +428,17 @@ export default function GestionUsuarios() {
                 title={confirmModal.title}
                 message={confirmModal.message}
                 type={confirmModal.type}
+            />
+
+            {/* Confirmar Reseteo de Cuenta */}
+            <ConfirmModal
+                isOpen={resetConfirmModal.isOpen}
+                onClose={() => setResetConfirmModal({ isOpen: false, usuarioId: null })}
+                onConfirm={ejecutarReseteoCuenta}
+                title="Confirmar Reseteo de Cuenta"
+                message="¿Estás seguro de resetear esta cuenta? El usuario perderá el acceso a su cuenta"
+                type="danger"
+                confirmText ="Resetear"
             />
         </div>
     );

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, UserPlus, Clock, Mail, Phone, Building2, Shield, Send, User, AlertCircle, Edit } from 'lucide-react';
+import { X, UserPlus, Clock, Mail, Phone, Building2, Shield, Send, User, AlertCircle, Edit, RotateCcw } from 'lucide-react';
 
 // --- CONSTANTES GLOBALES ---
 const ROLES_DISPONIBLES = [
@@ -22,7 +22,7 @@ const ESTADO_INICIAL = {
     departamentoId: ""
 };
 
-export function CrearUsuarioModal({ isOpen, onClose, onSubmit, departamentos = [], usuarioAEditar = null }) {
+export function CrearUsuarioModal({ isOpen, onClose, onSubmit, departamentos = [], usuarioAEditar = null, onReset }) {
     // --- ESTADOS ---
     const [formData, setFormData] = useState(ESTADO_INICIAL);
     const [errores, setErrores] = useState({});
@@ -378,29 +378,54 @@ export function CrearUsuarioModal({ isOpen, onClose, onSubmit, departamentos = [
                     </form>
                 </div>
 
-                {/* BOTONES DINÁMICOS */}
-                <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3 bg-white">
-                    <button 
-                        type="submit" form="crear-usuario-form" disabled={isLoading || tieneErrores} 
-                        className="px-6 py-2.5 flex items-center justify-center min-w-[160px] text-sm font-medium text-white bg-[#0F2C59] hover:bg-[#0F2C59]/90 disabled:bg-gray-400 rounded-lg transition-colors"
-                    >
-                        {isLoading ? (
-                            <span className="flex items-center gap-2">
-                                <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                                Procesando...
-                            </span>
-                        ) : (
-                            <span className="flex items-center gap-2">
-                                {esModoEdicion ? <Edit size={18} /> : <UserPlus size={18} />}
-                                {esModoEdicion ? 'Guardar Cambios' : 'Crear Usuario'}
-                            </span>
+                {/* BOTONES DINAMICOS Y DE RESETEO */}
+                <div className="px-6 py-4 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-4 bg-white">
+                    
+                    {/* BotOn Resetear */}
+                    <div className="w-full sm:w-auto flex-shrink-0">
+                        {esModoEdicion && usuarioAEditar?.id && (
+                            <button
+                                type="button"
+                                onClick={() => onReset(usuarioAEditar.id)}
+                                className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 text-red-600 border border-red-600 hover:bg-red-50 font-medium rounded-lg transition-colors"
+                            >
+                                <RotateCcw size={18} />
+                                Resetear cuenta
+                            </button>
                         )}
-                    </button>
+                    </div>
+
+                        {/* Botones Cancelar y Guardar */}
+                        <div className="flex flex-col-reverse sm:flex-row gap-3 w-full sm:w-auto">
+                            <button 
+                                type="button" 
+                                onClick={onClose}
+                                className="w-full sm:w-auto px-6 py-2.5 flex items-center justify-center text-sm font-medium text-[#0F2C59] border-2 border-[#0F2C59] hover:bg-[#0F2C59] hover:text-white rounded-lg transition-colors"
+                            >
+                                Cancelar
+                            </button>
+                            <button 
+                                type="submit" form="crear-usuario-form" disabled={isLoading || tieneErrores} 
+                                className="w-full sm:w-auto px-6 py-2.5 flex items-center justify-center min-w-[160px] text-sm font-medium text-white bg-[#0F2C59] hover:bg-[#0F2C59]/90 disabled:bg-gray-400 rounded-lg transition-colors"
+                            >
+                                {isLoading ? (
+                                    <span className="flex items-center gap-2">
+                                        <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        Procesando...
+                                    </span>
+                                ) : (
+                                    <span className="flex items-center gap-2">
+                                        {esModoEdicion ? <Edit size={18} /> : <UserPlus size={18} />}
+                                        {esModoEdicion ? 'Guardar Cambios' : 'Crear Usuario'}
+                                    </span>
+                                )}
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
     );
 }
