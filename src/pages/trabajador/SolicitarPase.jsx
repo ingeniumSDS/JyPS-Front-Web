@@ -76,7 +76,7 @@ const handleSubmit = async (e) => {
             toast.success('Pase solicitado correctamente');
             navigate(-1);
         } else {
-            toast.error(resultado.mensaje || 'Error al procesar');
+            toast.error(resultado.mensaje );
             setIsSubmitting(false);
         }
     } catch (error) {
