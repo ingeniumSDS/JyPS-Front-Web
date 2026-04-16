@@ -91,7 +91,20 @@ export const useGestion = () => {
         }
     };
 
-    // ACTUALIZAR DEPARTAMENTO / PUT
+    // RESETEAR USAURIO / PETCH
+    const resetearCuentaUsuario = async (id) => {
+        try {
+            const respuesta = await request(`/usuarios/reset/${id}`, 'PATCH');
+            
+            return { exito: true, data: respuesta };
+            
+        } catch (error) {
+            console.error("Error en resetearCuentaUsuario:", error);
+            //error 
+            return { exito: false, mensaje: error.message || 'Error al resetear la cuenta' };
+        }
+    };
+
 
     // ASIGNAR JEFE DEPARTAMENTO / POST
     const asignarUnJefe = async (departamentoId, jefeId) => {
@@ -176,6 +189,7 @@ export const useGestion = () => {
     // TAREA: CAMBIO DE ESTADO DEPTOS/ PATCH
 
     return {
+        resetearCuentaUsuario,
         asignarUnJefe,
         crearDepartamento,
         cambiarEstadoUsuario,
