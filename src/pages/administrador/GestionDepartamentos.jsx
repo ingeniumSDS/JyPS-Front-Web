@@ -16,6 +16,8 @@ export default function GestionDepartamentos() {
     const [busqueda, setBusqueda] = useState('');
     const [filtroEstado, setFiltroEstado] = useState('Todos');
     const [isSaving, setIsSaving] = useState(false);
+    
+    const [visibleCount, setVisibleCount] = useState(5);
 
     const { obtenerDepartamento, crearDepartamento, obtenerUsuarios, asignarUnJefe } = useGestion();
 
@@ -78,6 +80,11 @@ export default function GestionDepartamentos() {
         cargarDepartamentos();
     }, []); 
 
+    // la cantidad visible a 5 
+    useEffect(() => {
+        setVisibleCount(5);
+    }, [busqueda, filtroEstado]);
+
     // Filtrado y Estadísticas
     const departamentosFiltrados = departamentos.filter(dept => {
         const coincideBusqueda = dept.nombre.toLowerCase().includes(busqueda.toLowerCase()) || 
@@ -85,6 +92,9 @@ export default function GestionDepartamentos() {
         const coincideEstado = filtroEstado === 'Todos' ? true : dept.estado === filtroEstado;
         return coincideBusqueda && coincideEstado;
     });
+
+    // Cortamos el arreglo para mostrar a 5
+    const departamentosVisibles = departamentosFiltrados.slice(0, visibleCount);
 
     const stats = {
         total: departamentos.length,
@@ -197,6 +207,10 @@ export default function GestionDepartamentos() {
         setConfirmModal({ ...confirmModal, isOpen: false });
     };
 
+    const handleLoadMore = () => {
+        setVisibleCount(prev => prev + 5);
+    };
+
     return (
         <div className="space-y-6">
             {/* Header */}
@@ -301,78 +315,92 @@ export default function GestionDepartamentos() {
                     <p className="text-gray-500">Intenta con otros filtros o términos de búsqueda</p>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 gap-6">
-                    {departamentosFiltrados.map((dept) => (
-                        <Card key={dept.id} className="overflow-hidden hover:shadow-md transition-shadow duration-300 border-gray-200 flex flex-col rounded-xl bg-white">
-                            <div className="p-4 sm:p-5 flex-1">
-                                <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-4 sm:mb-2">
-                                    <div className="flex items-start gap-3 w-full md:w-auto flex-1">
-                                        <div className="w-12 h-12 sm:w-14 sm:h-14 bg-[#0F2C59] rounded-full flex items-center justify-center text-white font-bold text-xl flex-shrink-0 shadow-sm">
-                                            <Building2 size={24} />
-                                        </div>
-                                        <div className="flex-1 min-w-0 w-full">
-                                            <h3 className="text-lg font-bold text-[#0F2C59] truncate">{dept.nombre}</h3>
-                                            
-                                            <div className="flex flex-col gap-3 mt-2">
-                                                <p className="text-sm text-gray-600 leading-relaxed line-clamp-2">
-                                                    {dept.descripcion}
-                                                </p>
+                <div className="flex flex-col gap-6">
+                    <div className="grid grid-cols-1 gap-6">
+                        {departamentosVisibles.map((dept) => (
+                            <Card key={dept.id} className="overflow-hidden hover:shadow-md transition-shadow duration-300 border-gray-200 flex flex-col rounded-xl bg-white">
+                                <div className="p-4 sm:p-5 flex-1">
+                                    <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-4 sm:mb-2">
+                                        <div className="flex items-start gap-3 w-full md:w-auto flex-1">
+                                            <div className="w-12 h-12 sm:w-14 sm:h-14 bg-[#0F2C59] rounded-full flex items-center justify-center text-white font-bold text-xl flex-shrink-0 shadow-sm">
+                                                <Building2 size={24} />
+                                            </div>
+                                            <div className="flex-1 min-w-0 w-full">
+                                                <h3 className="text-lg font-bold text-[#0F2C59] truncate">{dept.nombre}</h3>
                                                 
-                                                <div className="flex flex-wrap items-center gap-3 mt-1">
-                                                    <div className="flex items-center gap-1.5 text-xs sm:text-sm text-gray-600 bg-gray-50 px-2.5 py-1.5 rounded-md border border-gray-200">
-                                                        <UserCheck size={16} className="text-[#0F2C59]" />
-                                                        <span className="font-semibold text-gray-700">Jefe:</span>
-                                                        <span className="truncate max-w-[150px]">{dept.jefeNombre}</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-1.5 text-xs sm:text-sm text-gray-600 bg-gray-50 px-2.5 py-1.5 rounded-md border border-gray-200">
-                                                        <Users size={16} className="text-[#0F2C59]" />
-                                                        <span className="font-semibold text-gray-700">Empleados:</span>
-                                                        <span>{dept.trabajadores}</span>
+                                                <div className="flex flex-col gap-3 mt-2">
+                                                    <p className="text-sm text-gray-600 leading-relaxed line-clamp-2">
+                                                        {dept.descripcion}
+                                                    </p>
+                                                    
+                                                    <div className="flex flex-wrap items-center gap-3 mt-1">
+                                                        <div className="flex items-center gap-1.5 text-xs sm:text-sm text-gray-600 bg-gray-50 px-2.5 py-1.5 rounded-md border border-gray-200">
+                                                            <UserCheck size={16} className="text-[#0F2C59]" />
+                                                            <span className="font-semibold text-gray-700">Jefe:</span>
+                                                            <span className="truncate max-w-[150px]">{dept.jefeNombre}</span>
+                                                        </div>
+                                                        <div className="flex items-center gap-1.5 text-xs sm:text-sm text-gray-600 bg-gray-50 px-2.5 py-1.5 rounded-md border border-gray-200">
+                                                            <Users size={16} className="text-[#0F2C59]" />
+                                                            <span className="font-semibold text-gray-700">Empleados:</span>
+                                                            <span>{dept.trabajadores}</span>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
-                                    <div className="flex flex-row md:flex-col justify-between items-center md:items-end w-full md:w-auto gap-4 md:gap-3 mt-2 md:mt-0 flex-shrink-0">
-                                        <span className={`px-3 py-1.5 sm:px-2.5 sm:py-1 rounded-full text-xs font-medium flex items-center gap-1.5 border ${
-                                            dept.estado === 'Activo' 
-                                            ? 'bg-green-50 text-green-700 border-green-200' 
-                                            : 'bg-red-50 text-red-700 border-red-200'
-                                        }`}>
-                                            {dept.estado === 'Activo' ? <Check size={14} /> : <XIcon size={14} />}
-                                            {dept.estado}
-                                        </span>
-                                        
-                                        <div className="flex gap-2 w-full sm:w-auto">
-                                            <button
-                                                onClick={() => handleAbrirEditar(dept)}
-                                                className="flex-1 md:flex-none flex justify-center items-center gap-1.5 px-3 py-2 sm:py-1.5 border border-[#0F2C59] text-[#0F2C59] rounded-lg text-sm font-medium hover:bg-blue-50 transition-colors"
-                                                title="Editar"
-                                            >
-                                                <Edit2 size={16} />
-                                            </button>
+                                        <div className="flex flex-row md:flex-col justify-between items-center md:items-end w-full md:w-auto gap-4 md:gap-3 mt-2 md:mt-0 flex-shrink-0">
+                                            <span className={`px-3 py-1.5 sm:px-2.5 sm:py-1 rounded-full text-xs font-medium flex items-center gap-1.5 border ${
+                                                dept.estado === 'Activo' 
+                                                ? 'bg-green-50 text-green-700 border-green-200' 
+                                                : 'bg-red-50 text-red-700 border-red-200'
+                                            }`}>
+                                                {dept.estado === 'Activo' ? <Check size={14} /> : <XIcon size={14} />}
+                                                {dept.estado}
+                                            </span>
                                             
-                                            {dept.estado === 'Activo' ? (
+                                            <div className="flex gap-2 w-full sm:w-auto">
                                                 <button
-                                                    onClick={() => handleToggleEstado(dept)}
-                                                    className='flex items-center gap-1 px-4 py-2 sm:py-1.5 border border-red-600 text-red-600 rounded-md hover:bg-red-50 transition-colors font-medium text-sm'
+                                                    onClick={() => handleAbrirEditar(dept)}
+                                                    className="flex-1 md:flex-none flex justify-center items-center gap-1.5 px-3 py-2 sm:py-1.5 border border-[#0F2C59] text-[#0F2C59] rounded-lg text-sm font-medium hover:bg-blue-50 transition-colors"
+                                                    title="Editar"
                                                 >
-                                                    <XIcon size={16}/> Desactivar
+                                                    <Edit2 size={16} />
                                                 </button>
-                                            ) : (
-                                                <button
-                                                    onClick={() => handleToggleEstado(dept)}
-                                                    className="flex items-center gap-1 px-4 py-2 sm:py-1.5 border border-green-600 text-green-600 rounded-md hover:bg-green-50 transition-colors font-medium text-sm"
-                                                >
-                                                    <Check size={16}/> Activar
-                                                </button>
-                                            )}
+                                                
+                                                {dept.estado === 'Activo' ? (
+                                                    <button
+                                                        onClick={() => handleToggleEstado(dept)}
+                                                        className='flex items-center gap-1 px-4 py-2 sm:py-1.5 border border-red-600 text-red-600 rounded-md hover:bg-red-50 transition-colors font-medium text-sm'
+                                                    >
+                                                        <XIcon size={16}/> Desactivar
+                                                    </button>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => handleToggleEstado(dept)}
+                                                        className="flex items-center gap-1 px-4 py-2 sm:py-1.5 border border-green-600 text-green-600 rounded-md hover:bg-green-50 transition-colors font-medium text-sm"
+                                                    >
+                                                        <Check size={16}/> Activar
+                                                    </button>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        </Card>
-                    ))}
+                            </Card>
+                        ))}
+                    </div>
+                    
+                    {/* Botón de cargar mas*/}
+                    {visibleCount < departamentosFiltrados.length && (
+                        <div className="flex justify-center mt-4">
+                            <Button 
+                                onClick={handleLoadMore} 
+                                className="bg-white border-1 border-[#0F2C59] text-[#0F2C59]  font-semibold px-8 py-2 rounded-xl transition-colors"
+                            >
+                                Ver más departamentos
+                            </Button>
+                        </div>
+                    )}
                 </div>
             )}
 
