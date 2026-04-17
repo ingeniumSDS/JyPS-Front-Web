@@ -75,10 +75,10 @@ const DetalleSolicitudModal = ({ isOpen, onClose, solicitud, onActualizacion }) 
   };
 
   // Funcion descarga 
-  const handleDescargarArchivo = async (archivoUrl) => {
-    if (!archivoUrl) return;
+  const handleDescargarArchivo = async (archivoRef, empleadoId) => {
+    if (!archivoRef) return;
     try {
-      await descargarArchivoJustificante(archivoUrl);
+      await descargarArchivoJustificante(archivoRef, empleadoId);
       toast.success("Descarga completada");
     } catch (error) {
       toast.error("Error al intentar descargar el archivo.");
@@ -155,21 +155,25 @@ const DetalleSolicitudModal = ({ isOpen, onClose, solicitud, onActualizacion }) 
                 <h4>Evidencia Adjunta</h4>
               </div>
               <div className="ml-6 space-y-2">
-                {solicitud.archivos && solicitud.archivos.length > 0 && (
+                {info.archivos && info.archivos.length > 0 && (
                   <div className="mb-4 border-t border-gray-100 pt-3">
                       <div className="flex flex-wrap gap-2">
-                          {solicitud.archivos.map((archivo, idx) => {
+                      {info.archivos.map((archivo, idx) => {
                 const refArchivo = typeof archivo === 'string' 
                     ? archivo 
                     : (archivo.urlDescarga || archivo.nombreOriginal);
 
-                const nombreMostrar = refArchivo ? refArchivo.split('/').pop() : 'Archivo adjunto';
+                const nombreMostrar = typeof archivo === 'object' && archivo?.nombreOriginal
+                  ? archivo.nombreOriginal
+                  : (refArchivo ? refArchivo.split('/').pop() : 'Archivo adjunto');
+
+                const empleadoId = info.empleadoId || solicitud.empleadoId;
 
                 return (
                     <button
                         key={idx}
                         type="button"
-                        onClick={() => handleDescargarArchivo(refArchivo)} // Corrección 2: Evento onClick activo
+                    onClick={() => handleDescargarArchivo(refArchivo, empleadoId)}
                         className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-md border bg-gray-50 text-blue-700 border-gray-200 hover:bg-blue-50 transition-colors"
                     >
                         <Download size={14} />

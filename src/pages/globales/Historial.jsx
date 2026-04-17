@@ -232,6 +232,8 @@ export default function Historial() {
             const nombreFinal = nombreArchivoGuardado.split('/').pop();
             await descargarArchivoJustificante(user.id, nombreFinal); 
             toast.success("Descarga exitosa");
+        } catch (error) {
+            toast.error(error?.message || "Error al intentar descargar el archivo.");
         } finally {
             setDescargandoArchivo(null); 
         }

@@ -116,23 +116,56 @@ export const useIncidencias = () => {
         }
     };
 
-    // Descarga y abre un archivo adjunto usando la URL completa
-    const descargarArchivoJustificante = async (urlArchivo) => {
+    // Descarga y abre un archivo adjunto usando URL completa, ruta relativa o nombre de archivo.
+    const descargarArchivoJustificante = async (archivoRef, empleadoId = null) => {
         try {
-            const url = urlArchivo; 
+            if (!archivoRef) {
+                throw new Error('Referencia de archivo no valida.');
+            }
+
+            const baseUrl = (import.meta.env.VITE_API_BASE_URL || '/api/v1').replace(/\/$/, '');
+            const esUrlAbsoluta = /^https?:\/\//i.test(archivoRef);
+            const esRutaApiRelativa = archivoRef.startsWith('/api/');
+
+            let url = archivoRef;
+
+            // Si solo viene el nombre del archivo, construimos la ruta de descarga.
+            if (!esUrlAbsoluta && !esRutaApiRelativa) {
+                const nombreArchivo = archivoRef.split('/').pop();
+                if (!empleadoId || !nombreArchivo) {
+                    throw new Error('No se pudo construir la URL de descarga.');
+                }
+                const archivoCodificado = encodeURIComponent(nombreArchivo);
+                url = `${baseUrl}/justificantes/${empleadoId}/${archivoCodificado}`;
+            }
+
+            // Evita mixed content cuando el front corre en HTTPS y el backend devuelve URL HTTP.
+            if (esUrlAbsoluta) {
+                const parsedUrl = new URL(archivoRef);
+                const frontEnHttps = window.location.protocol === 'https:';
+                const backendEnHttp = parsedUrl.protocol === 'http:';
+
+                if (frontEnHttps && backendEnHttp) {
+                    // Si es ruta de API, preferimos usarla relativa para pasar por el mismo origen/proxy.
+                    if (parsedUrl.pathname.startsWith('/api/')) {
+                        url = `${parsedUrl.pathname}${parsedUrl.search}`;
+                    } else {
+                        url = archivoRef.replace(/^http:/i, 'https:');
+                    }
+                }
+            }
             
             const token = localStorage.getItem('usuario'); 
             if (!token) {
-                console.error("JWT no encontrado bajo la clave 'usuario'.");
-                alert("Tu sesión ha expirado. Vuelve a iniciar sesión.");
-                return;
+                throw new Error('Tu sesion ha expirado. Vuelve a iniciar sesion.');
             }
 
             // Usamos fetch nativo porque necesitamos manejar la respuesta como un Blob (archivo binario)
             const respuesta = await fetch(url, {
                 method: 'GET',
                 headers: {
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': `Bearer ${token}`,
+                    'ngrok-skip-browser-warning': 'true'
                 }
             });
 
@@ -154,7 +187,7 @@ export const useIncidencias = () => {
 
         } catch (error) {
             console.error("Error al descargar el archivo:", error);
-            alert(`Hubo un error al intentar abrir el archivo: ${error.message}`);
+            throw error;
         }
     };
 

@@ -40,26 +40,55 @@ export const useHistorial = () => {
         }
     };
 
-    //Descarga y abre un archivo adjunto en una nueva pestaña.
-    const descargarArchivoJustificante = async (empleadoId, nombreArchivoGuardado) => {
+    // Descarga y abre un archivo adjunto con URL completa, ruta relativa o nombre de archivo.
+    const descargarArchivoJustificante = async (empleadoId, archivoRef) => {
         try {
             const baseUrl = (import.meta.env.VITE_API_BASE_URL || '/api/v1').replace(/\/$/, '');
-            const archivoCodificado = encodeURIComponent(nombreArchivoGuardado);
-            const url = `${baseUrl}/justificantes/${empleadoId}/${archivoCodificado}`;
+
+            if (!archivoRef) {
+                throw new Error('Referencia de archivo no valida.');
+            }
+
+            const esUrlAbsoluta = /^https?:\/\//i.test(archivoRef);
+            const esRutaApiRelativa = archivoRef.startsWith('/api/');
+
+            let url = archivoRef;
+            if (!esUrlAbsoluta && !esRutaApiRelativa) {
+                const nombreArchivo = archivoRef.split('/').pop();
+                if (!empleadoId || !nombreArchivo) {
+                    throw new Error('No se pudo construir la URL de descarga.');
+                }
+                const archivoCodificado = encodeURIComponent(nombreArchivo);
+                url = `${baseUrl}/justificantes/${empleadoId}/${archivoCodificado}`;
+            }
+
+            // Evita mixed content cuando el front corre en HTTPS y el backend devuelve URL HTTP.
+            if (esUrlAbsoluta) {
+                const parsedUrl = new URL(archivoRef);
+                const frontEnHttps = window.location.protocol === 'https:';
+                const backendEnHttp = parsedUrl.protocol === 'http:';
+
+                if (frontEnHttps && backendEnHttp) {
+                    if (parsedUrl.pathname.startsWith('/api/')) {
+                        url = `${parsedUrl.pathname}${parsedUrl.search}`;
+                    } else {
+                        url = archivoRef.replace(/^http:/i, 'https:');
+                    }
+                }
+            }
             
             // Verificacion del token
             const token = localStorage.getItem('usuario'); 
             if (!token) {
-                console.error("JWT no encontrado bajo la clave 'usuario'.");
-                alert("Tu sesión ha expirado. Vuelve a iniciar sesión.");
-                return;
+                throw new Error('Tu sesion ha expirado. Vuelve a iniciar sesion.');
             }
 
             // obtener el binario del archivo
             const respuesta = await fetch(url, {
                 method: 'GET',
                 headers: {
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': `Bearer ${token}`,
+                    'ngrok-skip-browser-warning': 'true'
                 }
             });
 
@@ -81,7 +110,7 @@ export const useHistorial = () => {
 
         } catch (error) {
             console.error("Error al descargar el archivo:", error);
-            alert(`Hubo un error al intentar abrir el archivo: ${error.message}`);
+            throw error;
         }
     };
 
