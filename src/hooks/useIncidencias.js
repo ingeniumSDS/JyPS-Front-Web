@@ -4,6 +4,15 @@ import { useState, useCallback } from 'react';
 export const useIncidencias = () => {
     const { request, isLoading, error } = useApi();
 
+    const normalizarNombreArchivo = (nombreArchivo) => {
+        if (!nombreArchivo) return '';
+        try {
+            return decodeURIComponent(nombreArchivo);
+        } catch {
+            return nombreArchivo;
+        }
+    };
+
     // Crear Pase de Salida (POST /pases)
     const crearPaseSalida = async (datosPase, archivos) => {
         try {
@@ -125,17 +134,18 @@ export const useIncidencias = () => {
 
             const baseUrl = (import.meta.env.VITE_API_BASE_URL || '/api/v1').replace(/\/$/, '');
             const esUrlAbsoluta = /^https?:\/\//i.test(archivoRef);
-            const esRutaApiRelativa = archivoRef.startsWith('/api/');
+            const esRutaRelativa = archivoRef.startsWith('/');
 
             let url = archivoRef;
 
             // Si solo viene el nombre del archivo, construimos la ruta de descarga.
-            if (!esUrlAbsoluta && !esRutaApiRelativa) {
+            if (!esUrlAbsoluta && !esRutaRelativa) {
                 const nombreArchivo = archivoRef.split('/').pop();
                 if (!empleadoId || !nombreArchivo) {
                     throw new Error('No se pudo construir la URL de descarga.');
                 }
-                const archivoCodificado = encodeURIComponent(nombreArchivo);
+                const nombreNormalizado = normalizarNombreArchivo(nombreArchivo);
+                const archivoCodificado = encodeURIComponent(nombreNormalizado);
                 url = `${baseUrl}/justificantes/${empleadoId}/${archivoCodificado}`;
             }
 

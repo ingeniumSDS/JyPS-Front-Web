@@ -6,6 +6,16 @@ export const useHistorial = () => {
     const { request } = useApi();
     const [cargando, setCargando] = useState(false);
 
+    const normalizarNombreArchivo = (nombreArchivo) => {
+        if (!nombreArchivo) return '';
+        try {
+            // Evita doble codificacion: "archivo%20a.pdf" -> "archivo a.pdf" -> encodeURIComponent -> "%20"
+            return decodeURIComponent(nombreArchivo);
+        } catch {
+            return nombreArchivo;
+        }
+    };
+
      //Obtiene la lista de justificantes de un empleado
     const obtenerJustificantesEmpleado = async (empleadoId) => {
         setCargando(true);
@@ -58,7 +68,8 @@ export const useHistorial = () => {
                 if (!empleadoId || !nombreArchivo) {
                     throw new Error('No se pudo construir la URL de descarga.');
                 }
-                const archivoCodificado = encodeURIComponent(nombreArchivo);
+                const nombreNormalizado = normalizarNombreArchivo(nombreArchivo);
+                const archivoCodificado = encodeURIComponent(nombreNormalizado);
                 url = `${baseUrl}/justificantes/${empleadoId}/${archivoCodificado}`;
             }
 
