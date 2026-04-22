@@ -50,10 +50,10 @@ export const useHistorial = () => {
             }
 
             const esUrlAbsoluta = /^https?:\/\//i.test(archivoRef);
-            const esRutaApiRelativa = archivoRef.startsWith('/api/');
+            const esRutaRelativa = archivoRef.startsWith('/');
 
             let url = archivoRef;
-            if (!esUrlAbsoluta && !esRutaApiRelativa) {
+            if (!esUrlAbsoluta && !esRutaRelativa) {
                 const nombreArchivo = archivoRef.split('/').pop();
                 if (!empleadoId || !nombreArchivo) {
                     throw new Error('No se pudo construir la URL de descarga.');

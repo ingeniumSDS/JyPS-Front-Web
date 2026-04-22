@@ -225,12 +225,11 @@ export default function Historial() {
         setSolicitudAEditar(null);
     };
 
-    const handleDescargarArchivo = async (nombreArchivoGuardado) => {
-        if (!user?.id || !nombreArchivoGuardado) return;
-        setDescargandoArchivo(nombreArchivoGuardado); 
+    const handleDescargarArchivo = async (archivoRef) => {
+        if (!user?.id || !archivoRef) return;
+        setDescargandoArchivo(archivoRef); 
         try {
-            const nombreFinal = nombreArchivoGuardado.split('/').pop();
-            await descargarArchivoJustificante(user.id, nombreFinal); 
+            await descargarArchivoJustificante(user.id, archivoRef); 
             toast.success("Descarga exitosa");
         } catch (error) {
             toast.error(error?.message || "Error al intentar descargar el archivo.");
@@ -312,17 +311,22 @@ export default function Historial() {
                                         <div className="mb-4 border-t border-gray-100 pt-3">
                                             <div className="flex flex-wrap gap-2">
                                                 {solicitud.archivos.map((archivo, idx) => {
-                                                    const refArchivo = archivo.urlDescarga || archivo.nombreOriginal;
+                                                    const refArchivo = typeof archivo === 'string'
+                                                        ? archivo
+                                                        : (archivo?.urlDescarga || archivo?.nombreOriginal || archivo?.nombreGuardado || '');
+                                                    const nombreMostrar = typeof archivo === 'string'
+                                                        ? (archivo.split('/').pop() || 'Archivo adjunto')
+                                                        : (archivo?.nombreOriginal || archivo?.nombreGuardado || (refArchivo ? refArchivo.split('/').pop() : 'Archivo adjunto'));
                                                     const isDownloading = descargandoArchivo === refArchivo;
                                                     return (
                                                         <button
                                                             key={idx}
                                                             onClick={() => handleDescargarArchivo(refArchivo)}
-                                                            disabled={isDownloading}
+                                                            disabled={isDownloading || !refArchivo}
                                                             className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-md border bg-gray-50 text-blue-700 border-gray-200 hover:bg-blue-50"
                                                         >
                                                             <Download size={14} />
-                                                            <span className="truncate max-w-[150px]">{archivo.nombreOriginal}</span>
+                                                            <span className="truncate max-w-[150px]">{nombreMostrar}</span>
                                                         </button>
                                                     );
                                                 })}
