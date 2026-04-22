@@ -6,11 +6,17 @@ export const useIncidencias = () => {
 
     const normalizarNombreArchivo = (nombreArchivo) => {
         if (!nombreArchivo) return '';
-        try {
-            return decodeURIComponent(nombreArchivo);
-        } catch {
-            return nombreArchivo;
+        let normalizado = nombreArchivo;
+        for (let i = 0; i < 3; i++) {
+            try {
+                const decodificado = decodeURIComponent(normalizado);
+                if (decodificado === normalizado) break;
+                normalizado = decodificado;
+            } catch {
+                break;
+            }
         }
+        return normalizado;
     };
 
     // Crear Pase de Salida (POST /pases)
@@ -137,6 +143,7 @@ export const useIncidencias = () => {
             const esRutaRelativa = archivoRef.startsWith('/');
 
             let url = archivoRef;
+            let urlsDeDescarga = [url];
 
             // Si solo viene el nombre del archivo, construimos la ruta de descarga.
             if (!esUrlAbsoluta && !esRutaRelativa) {
@@ -147,6 +154,11 @@ export const useIncidencias = () => {
                 const nombreNormalizado = normalizarNombreArchivo(nombreArchivo);
                 const archivoCodificado = encodeURIComponent(nombreNormalizado);
                 url = `${baseUrl}/justificantes/${empleadoId}/${archivoCodificado}`;
+
+                // Fallback para nombres que ya venian codificados desde origen (ej. %20 o %2520).
+                const archivoCodificadoAlterno = encodeURIComponent(nombreArchivo);
+                const urlAlterna = `${baseUrl}/justificantes/${empleadoId}/${archivoCodificadoAlterno}`;
+                urlsDeDescarga = urlAlterna !== url ? [url, urlAlterna] : [url];
             }
 
             // Evita mixed content cuando el front corre en HTTPS y el backend devuelve URL HTTP.
@@ -162,6 +174,7 @@ export const useIncidencias = () => {
                     } else {
                         url = archivoRef.replace(/^http:/i, 'https:');
                     }
+                    urlsDeDescarga = [url];
                 }
             }
             
@@ -171,13 +184,27 @@ export const useIncidencias = () => {
             }
 
             // Usamos fetch nativo porque necesitamos manejar la respuesta como un Blob (archivo binario)
-            const respuesta = await fetch(url, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'ngrok-skip-browser-warning': 'true'
+            let respuesta = null;
+            for (let i = 0; i < urlsDeDescarga.length; i++) {
+                const urlCandidata = urlsDeDescarga[i];
+                respuesta = await fetch(urlCandidata, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'ngrok-skip-browser-warning': 'true'
+                    }
+                });
+
+                if (respuesta.ok) {
+                    break;
                 }
-            });
+
+                const esUltimoIntento = i === urlsDeDescarga.length - 1;
+                const debeReintentar = respuesta.status === 403 || respuesta.status === 404;
+                if (esUltimoIntento || !debeReintentar) {
+                    break;
+                }
+            }
 
             if (!respuesta.ok) {
                 throw new Error(`Error HTTP del servidor: ${respuesta.status}`);

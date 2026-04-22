@@ -8,12 +8,18 @@ export const useHistorial = () => {
 
     const normalizarNombreArchivo = (nombreArchivo) => {
         if (!nombreArchivo) return '';
-        try {
-            // Evita doble codificacion: "archivo%20a.pdf" -> "archivo a.pdf" -> encodeURIComponent -> "%20"
-            return decodeURIComponent(nombreArchivo);
-        } catch {
-            return nombreArchivo;
+        // Evita doble/triple codificacion: %2520 -> %20 -> espacio
+        let normalizado = nombreArchivo;
+        for (let i = 0; i < 3; i++) {
+            try {
+                const decodificado = decodeURIComponent(normalizado);
+                if (decodificado === normalizado) break;
+                normalizado = decodificado;
+            } catch {
+                break;
+            }
         }
+        return normalizado;
     };
 
      //Obtiene la lista de justificantes de un empleado
@@ -63,6 +69,7 @@ export const useHistorial = () => {
             const esRutaRelativa = archivoRef.startsWith('/');
 
             let url = archivoRef;
+            let urlsDeDescarga = [url];
             if (!esUrlAbsoluta && !esRutaRelativa) {
                 const nombreArchivo = archivoRef.split('/').pop();
                 if (!empleadoId || !nombreArchivo) {
@@ -71,6 +78,11 @@ export const useHistorial = () => {
                 const nombreNormalizado = normalizarNombreArchivo(nombreArchivo);
                 const archivoCodificado = encodeURIComponent(nombreNormalizado);
                 url = `${baseUrl}/justificantes/${empleadoId}/${archivoCodificado}`;
+
+                // Fallback para nombres que ya venian codificados desde origen (ej. %20 o %2520).
+                const archivoCodificadoAlterno = encodeURIComponent(nombreArchivo);
+                const urlAlterna = `${baseUrl}/justificantes/${empleadoId}/${archivoCodificadoAlterno}`;
+                urlsDeDescarga = urlAlterna !== url ? [url, urlAlterna] : [url];
             }
 
             // Evita mixed content cuando el front corre en HTTPS y el backend devuelve URL HTTP.
@@ -85,6 +97,7 @@ export const useHistorial = () => {
                     } else {
                         url = archivoRef.replace(/^http:/i, 'https:');
                     }
+                    urlsDeDescarga = [url];
                 }
             }
             
@@ -95,13 +108,27 @@ export const useHistorial = () => {
             }
 
             // obtener el binario del archivo
-            const respuesta = await fetch(url, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'ngrok-skip-browser-warning': 'true'
+            let respuesta = null;
+            for (let i = 0; i < urlsDeDescarga.length; i++) {
+                const urlCandidata = urlsDeDescarga[i];
+                respuesta = await fetch(urlCandidata, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'ngrok-skip-browser-warning': 'true'
+                    }
+                });
+
+                if (respuesta.ok) {
+                    break;
                 }
-            });
+
+                const esUltimoIntento = i === urlsDeDescarga.length - 1;
+                const debeReintentar = respuesta.status === 403 || respuesta.status === 404;
+                if (esUltimoIntento || !debeReintentar) {
+                    break;
+                }
+            }
 
             if (!respuesta.ok) {
                 throw new Error(`Error HTTP del servidor: ${respuesta.status}`);
